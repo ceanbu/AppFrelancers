@@ -1,0 +1,171 @@
+<html>
+  <head>
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="" />
+    <link
+      rel="stylesheet"
+      as="style"
+      onload="this.rel='stylesheet'"
+      href="https://fonts.googleapis.com/css2?display=swap&amp;family=Noto+Sans%3Awght%40400%3B500%3B700%3B900&amp;family=Work+Sans%3Awght%40400%3B500%3B700%3B900"
+    />
+
+    <title>Stitch Design</title>
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  </head>
+  <body>
+    <div
+      class="relative flex size-full min-h-screen flex-col bg-neutral-50 justify-between group/design-root overflow-x-hidden"
+      style='font-family: "Work Sans", "Noto Sans", sans-serif;'
+    >
+      <div>
+        <div class="flex items-center bg-neutral-50 p-4 pb-2 justify-between">
+          <h2 class="text-[#141414] text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pl-12">Vacantes</h2>
+          <div class="flex w-12 items-center justify-end">
+            <button
+              class="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-12 bg-transparent text-[#141414] gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0"
+            >
+              <div class="text-[#141414]" data-icon="SlidersHorizontal" data-size="24px" data-weight="regular">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                  <path
+                    d="M40,88H73a32,32,0,0,0,62,0h81a8,8,0,0,0,0-16H135a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16Zm64-24A16,16,0,1,1,88,80,16,16,0,0,1,104,64ZM216,168H199a32,32,0,0,0-62,0H40a8,8,0,0,0,0,16h97a32,32,0,0,0,62,0h17a8,8,0,0,0,0-16Zm-48,24a16,16,0,1,1,16-16A16,16,0,0,1,168,192Z"
+                  ></path>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 bg-neutral-50 px-4 min-h-[72px] py-2 justify-between">
+          <div class="flex items-center gap-4">
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDB1itNsO22Y19lpBB4QPN9fKDav8xseuDa_OhZkxrflwgQknr_OZvA5coucJFKc_Snk-dG5M80ftJHjsdndTW6BYUxnXCMbTUNR4NCPmUTbHFolBWy12NSYLEcIhjwNlC_cl5ml3KnDqbVbNth0FInI9e7CaVDk9gbabmcV-7OZUhrjBhW95nd4gIMZeeOpBJeTXR7RUO-ncPpBeFFa8AZdHsxGlG1xQlV-dFcxIRzV1kunYLoTdIwzGRxQeJallvfDGMrrndJKA");'
+            ></div>
+            <div class="flex flex-col justify-center">
+              <p class="text-[#141414] text-base font-medium leading-normal line-clamp-1">Barista</p>
+              <p class="text-neutral-500 text-sm font-normal leading-normal line-clamp-2">Cafetería El Sol</p>
+            </div>
+          </div>
+          <div class="shrink-0">
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#ededed] text-[#141414] text-sm font-medium leading-normal w-fit"
+            >
+              <span class="truncate">Postularme</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 bg-neutral-50 px-4 min-h-[72px] py-2 justify-between">
+          <div class="flex items-center gap-4">
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDzjkwm0KIoqXKIEqALLzJ6MWeidIMfadZJ7Mw_Vkcd5Zyyylw3jen5Qua8BBrriLwTs67ThF06q4daKiLJ9xV0vg70RItksKHJCHfRqO5KuKC2AMmXRWjgK-0vFCNYgDvxIq9CN24R8-5w-tJSp7Hj-5GKDfg-kMM-JXCSiq2gavsn9-Zf76vy91_713lx3sVJEjrAwCSYvQfG_drbiagtHCfiBQqrOCuvRdU0Ofo5Xy2qnc5jJ69YVuc2IFekDDTRPg3Uhe7kIQ");'
+            ></div>
+            <div class="flex flex-col justify-center">
+              <p class="text-[#141414] text-base font-medium leading-normal line-clamp-1">Cocinero</p>
+              <p class="text-neutral-500 text-sm font-normal leading-normal line-clamp-2">Restaurante La Luna</p>
+            </div>
+          </div>
+          <div class="shrink-0">
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#ededed] text-[#141414] text-sm font-medium leading-normal w-fit"
+            >
+              <span class="truncate">Postularme</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 bg-neutral-50 px-4 min-h-[72px] py-2 justify-between">
+          <div class="flex items-center gap-4">
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDVL8912OO9-OmowYYkzhsaHJPjQVIT_vEv4fv8d2uIX3W3XJBAWXbX-CH_36qUKqJRm2aTqJH-3UGGlJ7o4lzq28ZZD__tkkO2GzTLb-08aZ0z-aQ3dJTm3uPcSARSrp0vHtZI01h0gjusflgEtt4SGslrN_9Sx4vRfe_q_dt8_Cajz8TQMZMpgBim9jgYotJq7cnncB4F4ZcP_zoFO9qSPgDafNPtOptfC3vUOV54LzTypm96rQchwFufdQr6GPKXe8Wo9iRm5w");'
+            ></div>
+            <div class="flex flex-col justify-center">
+              <p class="text-[#141414] text-base font-medium leading-normal line-clamp-1">Vendedor</p>
+              <p class="text-neutral-500 text-sm font-normal leading-normal line-clamp-2">Tienda de Ropa El Vestidor</p>
+            </div>
+          </div>
+          <div class="shrink-0">
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#ededed] text-[#141414] text-sm font-medium leading-normal w-fit"
+            >
+              <span class="truncate">Postularme</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 bg-neutral-50 px-4 min-h-[72px] py-2 justify-between">
+          <div class="flex items-center gap-4">
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuC0LYKBvrBhIXefJIx73jwz3oyk26h3lnRpU6L3bWJnDVNtABj4WCLl-60zjvkeOF_c9hKY7wSTwxn7k3sYPQcN1pGD57j74r4zbty88OMBfjKwze5cHzZYgL8JhDVmt8fterO9jP2rbm22McAr2yOXs-V1YVu6k6osVZ-FSgA1YwwI6l16j94JIbAHdhG2eTUm838B7iKtxLKuseHybfWQB9qVEALCLmX5T1xtLi_W-9f1ZKpbUA_V_LUvlSaSLsEMlNxOv73B-w");'
+            ></div>
+            <div class="flex flex-col justify-center">
+              <p class="text-[#141414] text-base font-medium leading-normal line-clamp-1">Cajero</p>
+              <p class="text-neutral-500 text-sm font-normal leading-normal line-clamp-2">Librería El Saber</p>
+            </div>
+          </div>
+          <div class="shrink-0">
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#ededed] text-[#141414] text-sm font-medium leading-normal w-fit"
+            >
+              <span class="truncate">Postularme</span>
+            </button>
+          </div>
+        </div>
+        <div class="flex items-center gap-4 bg-neutral-50 px-4 min-h-[72px] py-2 justify-between">
+          <div class="flex items-center gap-4">
+            <div
+              class="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-14"
+              style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCiuTSUkiSySGi_uqEOsb10ZJRRADs27KKgTWhEyooY_FMBV-nAwGnn6hzgsCGXaD6t2IJrU-d12q1x4XZH9hQWIOHGsRUqVDw6mBavpWUHel2XjI37oP_NLfSaJMQ_QiChby_05hQGS_A3DYjgLxh5OaXpC2lpDAHwiOuYcxCQ-5YNSN9ozHo7zKbSBD8CmfNFt4mSK96NCcoM05P6-TzbNzKoegWYPClaRnIWfNCI9pWexb4E_l7Srvk59ZdLAyR10FHHAf1kOw");'
+            ></div>
+            <div class="flex flex-col justify-center">
+              <p class="text-[#141414] text-base font-medium leading-normal line-clamp-1">Recepcionista</p>
+              <p class="text-neutral-500 text-sm font-normal leading-normal line-clamp-2">Gimnasio El Cuerpo</p>
+            </div>
+          </div>
+          <div class="shrink-0">
+            <button
+              class="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-full h-8 px-4 bg-[#ededed] text-[#141414] text-sm font-medium leading-normal w-fit"
+            >
+              <span class="truncate">Postularme</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="flex gap-2 border-t border-[#ededed] bg-neutral-50 px-4 pb-3 pt-2">
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-neutral-500" href="#">
+            <div class="text-neutral-500 flex h-8 items-center justify-center" data-icon="House" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M218.83,103.77l-80-75.48a1.14,1.14,0,0,1-.11-.11,16,16,0,0,0-21.53,0l-.11.11L37.17,103.77A16,16,0,0,0,32,115.55V208a16,16,0,0,0,16,16H96a16,16,0,0,0,16-16V160h32v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V115.55A16,16,0,0,0,218.83,103.77ZM208,208H160V160a16,16,0,0,0-16-16H112a16,16,0,0,0-16,16v48H48V115.55l.11-.1L128,40l79.9,75.43.11.1Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-neutral-500 text-xs font-medium leading-normal tracking-[0.015em]">Inicio</p>
+          </a>
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-[#141414]" href="#">
+            <div class="text-[#141414] flex h-8 items-center justify-center" data-icon="Briefcase" data-size="24px" data-weight="fill">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M152,112a8,8,0,0,1-8,8H112a8,8,0,0,1,0-16h32A8,8,0,0,1,152,112Zm80-40V200a16,16,0,0,1-16,16H40a16,16,0,0,1-16-16V72A16,16,0,0,1,40,56H80V48a24,24,0,0,1,24-24h48a24,24,0,0,1,24,24v8h40A16,16,0,0,1,232,72ZM96,56h64V48a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8Zm120,57.61V72H40v41.61A184,184,0,0,0,128,136,184,184,0,0,0,216,113.61Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-[#141414] text-xs font-medium leading-normal tracking-[0.015em]">Vacantes</p>
+          </a>
+          <a class="just flex flex-1 flex-col items-center justify-end gap-1 text-neutral-500" href="#">
+            <div class="text-neutral-500 flex h-8 items-center justify-center" data-icon="User" data-size="24px" data-weight="regular">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path
+                  d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"
+                ></path>
+              </svg>
+            </div>
+            <p class="text-neutral-500 text-xs font-medium leading-normal tracking-[0.015em]">Perfil</p>
+          </a>
+        </div>
+        <div class="h-5 bg-neutral-50"></div>
+      </div>
+    </div>
+  </body>
+</html>
