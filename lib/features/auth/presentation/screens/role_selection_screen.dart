@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/router/app_router.dart';
-import '../../../core/widgets/wf_button.dart';
+import 'package:workflex/core/constants/app_colors.dart';
+import 'package:workflex/core/constants/app_text_styles.dart';
+import 'package:workflex/core/router/app_router.dart';
+import 'package:workflex/core/widgets/wf_button.dart';
 
 /// A1 — Pantalla de Selección de Rol (RF1.1)
 class RoleSelectionScreen extends StatelessWidget {

@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_text_styles.dart';
-import '../../../core/widgets/wf_button.dart';
-import '../../../core/widgets/wf_text_field.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/router/app_router.dart';
+import 'package:workflex/core/constants/app_colors.dart';
+import 'package:workflex/core/constants/app_text_styles.dart';
+import 'package:workflex/core/widgets/wf_button.dart';
+import 'package:workflex/core/widgets/wf_text_field.dart';
+import 'package:workflex/core/utils/validators.dart';
+import 'package:workflex/core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 
 /// A7 — Pantalla de Inicio de Sesión (RF1.6)
