@@ -19,12 +19,13 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // ⚠️ REEMPLAZAR con valores reales de FlutterFire CLI
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'TU_API_KEY',
-    appId: 'TU_APP_ID',
-    messagingSenderId: 'TU_SENDER_ID',
-    projectId: 'TU_PROJECT_ID',
-    storageBucket: 'TU_STORAGE_BUCKET',
+    apiKey: 'AIzaSyAfwgDZyNuKlYvY3ojuV0DNdvsFw3-9SNI',
+    appId: '1:824730752907:android:e07df52746d670c71b018e',
+    messagingSenderId: '824730752907',
+    projectId: 'workflex-app-9d2cc',
+    storageBucket: 'workflex-app-9d2cc.firebasestorage.app',
   );
+
+  // ⚠️ REEMPLAZAR con valores reales de FlutterFire CLI
 }
