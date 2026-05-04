@@ -16,6 +16,7 @@
         "firebase_core",
         "firebase_messaging",
         "flutter",
+        "flutter_localizations",
         "flutter_riverpod",
         "flutter_svg",
         "go_router",
@@ -362,6 +363,21 @@
         "firebase_core_web",
         "flutter",
         "meta"
+      ]
+    },
+    {
+      "name": "flutter_localizations",
+      "version": "0.0.0",
+      "dependencies": [
+        "characters",
+        "clock",
+        "collection",
+        "flutter",
+        "intl",
+        "material_color_utilities",
+        "meta",
+        "path",
+        "vector_math"
       ]
     },
     {
@@ -1016,21 +1032,6 @@
       "dependencies": [
         "flutter",
         "shared_preferences_platform_interface"
-      ]
-    },
-    {
-      "name": "flutter_localizations",
-      "version": "0.0.0",
-      "dependencies": [
-        "characters",
-        "clock",
-        "collection",
-        "flutter",
-        "intl",
-        "material_color_utilities",
-        "meta",
-        "path",
-        "vector_math"
       ]
     },
     {

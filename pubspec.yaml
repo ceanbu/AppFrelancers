@@ -1,4 +1,4 @@
-name: workflex
+﻿name: workflex
 description: Plataforma de conexión entre empleadores y freelancers para trabajos temporales.
 publish_to: 'none'
 version: 1.7.0+1
@@ -8,6 +8,8 @@ environment:
 
 dependencies:
   flutter:
+    sdk: flutter
+  flutter_localizations:
     sdk: flutter
 
   # Firebase
