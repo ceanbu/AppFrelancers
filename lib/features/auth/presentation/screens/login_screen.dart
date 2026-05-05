@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workflex/core/constants/app_colors.dart';
@@ -9,7 +9,7 @@ import 'package:workflex/core/utils/validators.dart';
 import 'package:workflex/core/router/app_router.dart';
 import '../providers/auth_provider.dart';
 
-/// A7 — Pantalla de Inicio de Sesión (RF1.6)
+/// A7 â€” Pantalla de Inicio de SesiÃ³n (RF1.6)
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -38,9 +38,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           rememberSession: _rememberSession,
         );
     if (success && mounted) {
-      // El router redirigirá automáticamente al dashboard correspondiente
-      // basándose en el rol guardado en Firestore
-      context.go(AppRoutes.jobsFeed); // placeholder, ajustar con rol real
+      // El router redirigirÃ¡ automÃ¡ticamente al dashboard correspondiente
+      // basÃ¡ndose en el rol guardado en Firestore
+      context.go('/freelancer/jobs'); // placeholder, ajustar con rol real
     }
   }
 
@@ -51,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Iniciar Sesión'),
+        title: const Text('Iniciar SesiÃ³n'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -67,7 +67,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text('Bienvenido de nuevo', style: AppTextStyles.displayMedium),
                 const SizedBox(height: 8),
                 Text(
-                  'Iniciá sesión para continuar',
+                  'IniciÃ¡ sesiÃ³n para continuar',
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -84,15 +84,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
 
                 WFTextField(
-                  hint: 'Mínimo 6 caracteres',
-                  label: 'Contraseña',
+                  hint: 'MÃ­nimo 6 caracteres',
+                  label: 'ContraseÃ±a',
                   controller: _passwordCtrl,
                   obscureText: true, // RF1.6 + RNF3.1.7 (ojo incluido en widget)
                   validator: AppValidators.validatePassword,
                 ),
                 const SizedBox(height: 8),
 
-                // RF1.6.1 — Recordar sesión
+                // RF1.6.1 â€” Recordar sesiÃ³n
                 Row(
                   children: [
                     Checkbox(
@@ -102,14 +102,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       activeColor: AppColors.primary,
                     ),
                     Text(
-                      'Recordar sesión',
+                      'Recordar sesiÃ³n',
                       style: AppTextStyles.bodyMedium,
                     ),
                     const Spacer(),
                     TextButton(
-                      onPressed: () {}, // TODO: Recuperar contraseña
+                      onPressed: () {}, // TODO: Recuperar contraseÃ±a
                       child: Text(
-                        '¿Olvidaste tu contraseña?',
+                        'Â¿Olvidaste tu contraseÃ±a?',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                         ),
@@ -145,7 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 24),
 
                 WFButton(
-                  label: 'Iniciar Sesión',
+                  label: 'Iniciar SesiÃ³n',
                   onPressed: _login,
                   isLoading: loginState.isLoading,
                 ),
@@ -155,13 +155,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '¿No tenés cuenta? ',
+                      'Â¿No tenÃ©s cuenta? ',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => context.go(AppRoutes.roleSelection),
+                      onTap: () => context.go('/'),
                       child: Text(
                         'Registrate',
                         style: AppTextStyles.bodyMedium.copyWith(

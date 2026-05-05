@@ -1,8 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/wf_button.dart';
 import '../../../../core/widgets/wf_text_field.dart';
+import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_text_styles.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../widgets/address_ibge_widget.dart';
 
@@ -44,167 +47,179 @@ class _FreelancerStep1ScreenState extends ConsumerState<FreelancerStep1Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Registro - Paso 1/4'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            }
-          },
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          title: Text(
+            'Registro - Paso 1/4',
+            style: AppTextStyles.headlineMedium,
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              WFTextField(
-                controller: _fullNameController,
-                label: 'Nombre completo *',
-                hint: 'Ej: Juan Pérez',
-                validator: (value) => value == null || value.isEmpty ? 'Ingrese su nombre completo' : null,
-              ),
-              const SizedBox(height: 16),
-
-              DropdownButtonFormField<String>(
-                value: _documentType,
-                decoration: const InputDecoration(
-                  labelText: 'Tipo de documento *',
-                  border: OutlineInputBorder(),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WFTextField(
+                  controller: _fullNameController,
+                  label: 'Nombre completo *',
+                  hint: 'Ej: Juan Perez',
                 ),
-                items: const [
-                  DropdownMenuItem(value: 'CPF', child: Text('CPF')),
-                  DropdownMenuItem(value: 'RG', child: Text('RG')),
-                  DropdownMenuItem(value: 'RNM', child: Text('RNM')),
-                  DropdownMenuItem(value: 'CRNM', child: Text('CRNM')),
-                ],
-                onChanged: (value) => setState(() => _documentType = value),
-                validator: (value) => value == null ? 'Seleccione un tipo' : null,
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              WFTextField(
-                controller: _documentNumberController,
-                label: 'Número de documento *',
-                hint: 'Ej: 12345678900',
-                validator: (value) => value == null || value.isEmpty ? 'Ingrese el número de documento' : null,
-              ),
-              const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: _documentType,
+                  decoration: InputDecoration(
+                    labelText: 'Tipo de documento *',
+                    labelStyle: AppTextStyles.bodyMedium,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.border),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: AppColors.borderFocus),
+                    ),
+                  ),
+                  items: const [
+                    DropdownMenuItem(value: 'CPF', child: Text('CPF')),
+                    DropdownMenuItem(value: 'RG', child: Text('RG')),
+                    DropdownMenuItem(value: 'RNM', child: Text('RNM')),
+                    DropdownMenuItem(value: 'CRNM', child: Text('CRNM')),
+                  ],
+                  onChanged: (value) => setState(() => _documentType = value),
+                  validator: (value) => value == null ? 'Seleccione un tipo' : null,
+                ),
+                const SizedBox(height: 16),
 
-              GestureDetector(
-                onTap: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime(2000, 1, 1),
-                    firstDate: DateTime(1950),
-                    lastDate: DateTime.now(),
-                    locale: const Locale('pt', 'BR'),
-                  );
-                  if (picked != null) setState(() => _birthDate = picked);
-                },
-                child: AbsorbPointer(
-                  child: TextFormField(
-                    decoration: const InputDecoration(
-                      labelText: 'Fecha de nacimiento *',
-                      hintText: 'DD/MM/AAAA',
-                      suffixIcon: Icon(Icons.calendar_today),
-                      border: OutlineInputBorder(),
+                WFTextField(
+                  controller: _documentNumberController,
+                  label: 'Numero de documento *',
+                  hint: 'Ej: 12345678900',
+                ),
+                const SizedBox(height: 16),
+
+                GestureDetector(
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime(2000, 1, 1),
+                      firstDate: DateTime(1950),
+                      lastDate: DateTime.now(),
+                      locale: const Locale('pt', 'BR'),
+                    );
+                    if (picked != null) setState(() => _birthDate = picked);
+                  },
+                  child: AbsorbPointer(
+                    child: TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Fecha de nacimiento *',
+                        hintText: 'DD/MM/AAAA',
+                        suffixIcon: const Icon(Icons.calendar_today),
+                        labelStyle: AppTextStyles.bodyMedium,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: AppColors.borderFocus),
+                        ),
+                      ),
+                      controller: TextEditingController(
+                        text: _birthDate != null ? DateFormat('dd/MM/yyyy').format(_birthDate!) : '',
+                      ),
+                      validator: (value) {
+                        if (_birthDate == null) return 'Seleccione su fecha de nacimiento';
+                        if (!_isAgeValid) return 'Debe ser mayor de 18 anios';
+                        return null;
+                      },
                     ),
-                    controller: TextEditingController(
-                      text: _birthDate != null ? DateFormat('dd/MM/yyyy').format(_birthDate!) : '',
-                    ),
-                    validator: (value) {
-                      if (_birthDate == null) return 'Seleccione su fecha de nacimiento';
-                      if (!_isAgeValid) return 'Debe ser mayor de 18 años';
-                      return null;
-                    },
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              WFTextField(
-                controller: _phoneController,
-                label: 'Teléfono con DDD *',
-                hint: 'Ej: 11999999999',
-                keyboardType: TextInputType.phone,
-                validator: (value) => value == null || value.isEmpty ? 'Ingrese su teléfono' : null,
-              ),
-              const SizedBox(height: 16),
-
-              WFTextField(
-                controller: _emailController,
-                label: 'Email *',
-                hint: 'tu@email.com',
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Ingrese su email';
-                  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                    return 'Email no valido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              WFTextField(
-                controller: _passwordController,
-                label: 'Contraseña *',
-                hint: 'Mínimo 6 caracteres',
-                obscureText: _obscurePassword,
-                suffixIcon: IconButton(
-                  icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                WFTextField(
+                  controller: _phoneController,
+                  label: 'Telefono con DDD *',
+                  hint: 'Ej: 11999999999',
+                  keyboardType: TextInputType.phone,
                 ),
-                validator: (value) => value == null || value.length < 6 ? 'Mínimo 6 caracteres' : null,
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              WFTextField(
-                controller: _confirmPasswordController,
-                label: 'Confirmar contraseña *',
-                hint: 'Repite la contraseña',
-                obscureText: _obscureConfirmPassword,
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                WFTextField(
+                  controller: _emailController,
+                  label: 'Email *',
+                  hint: 'tu@email.com',
+                  keyboardType: TextInputType.emailAddress,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) return 'Confirme su contraseña';
-                  if (value != _passwordController.text) return 'Las contraseñas no coinciden';
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
 
-              WFTextField(
-                controller: _aboutMeController,
-                label: 'Sobre mí',
-                hint: 'Cuéntanos algo de ti... (opcional)',
-                maxLines: 3,
-              ),
-              const SizedBox(height: 24),
-
-              const Text('Dirección', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              AddressIbgeWidget(
-                onAddressChanged: (addressMap) => _address = addressMap,
-              ),
-              const SizedBox(height: 32),
-
-              if (_isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                WFButton(
-                  label: 'Siguiente',
-                  onPressed: _submitForm,
+                WFTextField(
+                  controller: _passwordController,
+                  label: 'Contrasena *',
+                  hint: 'Minimo 6 caracteres',
+                  obscureText: _obscurePassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  ),
                 ),
-            ],
+                const SizedBox(height: 16),
+
+                WFTextField(
+                  controller: _confirmPasswordController,
+                  label: 'Confirmar contrasena *',
+                  hint: 'Repite la contrasena',
+                  obscureText: _obscureConfirmPassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                WFTextField(
+                  controller: _aboutMeController,
+                  label: 'Sobre mi',
+                  hint: 'Cuentanos algo de ti... (opcional)',
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 24),
+
+                Text(
+                  'Direccion',
+                  style: AppTextStyles.headlineMedium,
+                ),
+                const SizedBox(height: 8),
+                AddressIbgeWidget(
+                  onAddressChanged: (addressMap) => _address = addressMap,
+                ),
+                const SizedBox(height: 32),
+
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  WFButton(
+                    label: 'Siguiente',
+                    onPressed: _submitForm,
+                  ),
+              ],
+            ),
           ),
         ),
       ),
@@ -216,7 +231,7 @@ class _FreelancerStep1ScreenState extends ConsumerState<FreelancerStep1Screen> {
     if (!_isAgeValid) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Debes tener al menos 18 años')),
+          SnackBar(content: Text('Debes tener al menos 18 anios', style: AppTextStyles.bodyMedium)),
         );
       }
       return;
@@ -226,7 +241,7 @@ class _FreelancerStep1ScreenState extends ConsumerState<FreelancerStep1Screen> {
         _address['number'] == null || _address['number']!.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Completa los campos obligatorios de dirección: Estado, Municipio y Número')),
+          SnackBar(content: Text('Completa los campos obligatorios de direccion', style: AppTextStyles.bodyMedium)),
         );
       }
       return;
@@ -248,17 +263,17 @@ class _FreelancerStep1ScreenState extends ConsumerState<FreelancerStep1Screen> {
       );
 
       if (mounted) {
-        Navigator.pushNamed(context, '/freelancer/step2');
+        context.go('/freelancer/register/step2');
       }
     } catch (e) {
       setState(() => _isLoading = false);
       String mensaje = e.toString();
       if (mensaje.contains('email-already-in-use')) {
-        mensaje = 'Este correo ya está en uso. Prueba con otro o inicia sesión.';
+        mensaje = 'Este correo ya esta en uso. Prueba con otro o inicia sesion.';
       }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(mensaje)),
+          SnackBar(content: Text(mensaje, style: AppTextStyles.bodyMedium)),
         );
       }
     }

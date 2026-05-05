@@ -29,6 +29,7 @@
         "riverpod_annotation",
         "shared_preferences",
         "shimmer",
+        "table_calendar",
         "url_launcher"
       ],
       "devDependencies": [
@@ -147,6 +148,15 @@
         "test_api",
         "vector_math",
         "vm_service"
+      ]
+    },
+    {
+      "name": "table_calendar",
+      "version": "3.2.0",
+      "dependencies": [
+        "flutter",
+        "intl",
+        "simple_gesture_detector"
       ]
     },
     {
@@ -891,6 +901,13 @@
         "stream_channel",
         "string_scanner",
         "term_glyph"
+      ]
+    },
+    {
+      "name": "simple_gesture_detector",
+      "version": "0.2.1",
+      "dependencies": [
+        "flutter"
       ]
     },
     {

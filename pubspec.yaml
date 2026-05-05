@@ -1,4 +1,4 @@
-﻿name: workflex
+name: workflex
 description: Plataforma de conexión entre empleadores y freelancers para trabajos temporales.
 publish_to: 'none'
 version: 1.7.0+1
@@ -46,6 +46,7 @@ dependencies:
 
   # HTTP (proxy IBGE)
   http: ^1.2.1
+  table_calendar: ^3.2.0
 
 dev_dependencies:
   flutter_test:

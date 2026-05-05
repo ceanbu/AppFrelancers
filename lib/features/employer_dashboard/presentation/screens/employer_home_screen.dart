@@ -1,13 +1,19 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
-// TODO: Implementar EmployerHomeScreen
 class EmployerHomeScreen extends StatelessWidget {
   const EmployerHomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('EmployerHomeScreen')),
-      body: const Center(child: Text('En construcción')),
+      appBar: AppBar(title: const Text('Inicio Empleador')),
+      body: const Center(
+        child: Text('Dashboard del empleador (en construcción)'),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }

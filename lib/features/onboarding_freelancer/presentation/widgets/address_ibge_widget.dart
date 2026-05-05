@@ -15,10 +15,10 @@ class _AddressIbgeWidgetState extends ConsumerState<AddressIbgeWidget> {
   final IbgeService _ibgeService = IbgeService();
   
   List<Map<String, dynamic>> _estados = [];
-  List<Map<String, dynamic>> _municipios = [];
-  
   String? _selectedEstadoId;
   String? _selectedEstadoNome;
+  
+  Future<List<Map<String, dynamic>>>? _municipiosFuture;
   String? _selectedMunicipioId;
   String? _selectedMunicipioNome;
   
@@ -28,7 +28,6 @@ class _AddressIbgeWidgetState extends ConsumerState<AddressIbgeWidget> {
   final _complementController = TextEditingController();
   
   bool _isLoadingEstados = true;
-  bool _isLoadingMunicipios = false;
   String? _errorMessage;
 
   @override
@@ -65,36 +64,25 @@ class _AddressIbgeWidgetState extends ConsumerState<AddressIbgeWidget> {
     }
   }
 
-  Future<void> _loadMunicipios(String estadoId) async {
+  void _onEstadoChanged(String? estadoId) {
     setState(() {
-      _isLoadingMunicipios = true;
-      _municipios = [];
+      _selectedEstadoId = estadoId;
+      final selected = _estados.firstWhere((e) => e['id'].toString() == estadoId);
+      _selectedEstadoNome = selected['nome'];
       _selectedMunicipioId = null;
       _selectedMunicipioNome = null;
-      _errorMessage = null;
+      if (estadoId != null) {
+        final idInt = int.tryParse(estadoId);
+        if (idInt != null) {
+          _municipiosFuture = _ibgeService.getMunicipios(idInt);
+        } else {
+          _municipiosFuture = Future.error('ID inválido');
+        }
+      } else {
+        _municipiosFuture = null;
+      }
     });
-    try {
-      // Convertir el ID a entero (los IDs de IBGE son números)
-      final idInt = int.tryParse(estadoId);
-      if (idInt == null) {
-        throw Exception('ID de estado inválido: ');
-      }
-      final municipios = await _ibgeService.getMunicipios(idInt);
-      setState(() {
-        _municipios = municipios;
-        _isLoadingMunicipios = false;
-      });
-      if (municipios.isEmpty) {
-        setState(() {
-          _errorMessage = 'No se encontraron municipios para este estado';
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al cargar municipios: ';
-        _isLoadingMunicipios = false;
-      });
-    }
+    _notifyParent();
   }
 
   void _notifyParent() {
@@ -127,19 +115,7 @@ class _AddressIbgeWidgetState extends ConsumerState<AddressIbgeWidget> {
                     child: Text(estado['nome']),
                   );
                 }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedEstadoId = value;
-                    final selected = _estados.firstWhere((e) => e['id'].toString() == value);
-                    _selectedEstadoNome = selected['nome'];
-                    _municipios = [];
-                    _selectedMunicipioId = null;
-                    _selectedMunicipioNome = null;
-                    _errorMessage = null;
-                  });
-                  if (value != null) _loadMunicipios(value);
-                  _notifyParent();
-                },
+                onChanged: _onEstadoChanged,
                 validator: (value) => value == null ? 'Seleccione un estado' : null,
               ),
         const SizedBox(height: 16),
@@ -148,30 +124,43 @@ class _AddressIbgeWidgetState extends ConsumerState<AddressIbgeWidget> {
         const SizedBox(height: 4),
         if (_selectedEstadoId == null)
           const Text('Primero seleccione un estado', style: TextStyle(color: Colors.grey))
-        else if (_isLoadingMunicipios)
+        else if (_municipiosFuture == null)
           const CircularProgressIndicator()
-        else if (_municipios.isEmpty && _errorMessage == null)
-          const Text('No hay municipios disponibles para este estado', style: TextStyle(color: Colors.orange))
         else
-          DropdownButtonFormField<String>(
-            value: _selectedMunicipioId,
-            hint: const Text('Seleccione un municipio'),
-            isExpanded: true,
-            items: _municipios.map((municipio) {
-              return DropdownMenuItem<String>(
-                value: municipio['id'].toString(),
-                child: Text(municipio['nome']),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _municipiosFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return Text('Error: ', style: const TextStyle(color: Colors.red));
+              }
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Text('No hay municipios disponibles', style: TextStyle(color: Colors.orange));
+              }
+              final municipios = snapshot.data!;
+              return DropdownButtonFormField<String>(
+                value: _selectedMunicipioId,
+                hint: const Text('Seleccione un municipio'),
+                isExpanded: true,
+                items: municipios.map((municipio) {
+                  return DropdownMenuItem<String>(
+                    value: municipio['id'].toString(),
+                    child: Text(municipio['nome']),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedMunicipioId = value;
+                    final selected = municipios.firstWhere((e) => e['id'].toString() == value);
+                    _selectedMunicipioNome = selected['nome'];
+                  });
+                  _notifyParent();
+                },
+                validator: (value) => value == null ? 'Seleccione un municipio' : null,
               );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedMunicipioId = value;
-                final selected = _municipios.firstWhere((e) => e['id'].toString() == value);
-                _selectedMunicipioNome = selected['nome'];
-              });
-              _notifyParent();
             },
-            validator: (value) => value == null ? 'Seleccione un municipio' : null,
           ),
         const SizedBox(height: 16),
 
@@ -218,13 +207,11 @@ class _AddressIbgeWidgetState extends ConsumerState<AddressIbgeWidget> {
           ),
           onChanged: (_) => _notifyParent(),
         ),
+
         if (_errorMessage != null)
           Padding(
             padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              _errorMessage!,
-              style: const TextStyle(color: Colors.red),
-            ),
+            child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
           ),
       ],
     );

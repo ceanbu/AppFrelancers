@@ -1,0 +1,19 @@
+﻿{
+  "skills": [
+    { "name": "Atención al cliente", "category": "gastronomia" },
+    { "name": "Cocina", "category": "gastronomia" },
+    { "name": "Barismo", "category": "gastronomia" },
+    { "name": "Mozos", "category": "gastronomia" },
+    { "name": "Ayudante de cocina", "category": "gastronomia" },
+    { "name": "Bartender", "category": "gastronomia" },
+    { "name": "Caja y manejo de efectivo", "category": "comercio" },
+    { "name": "Repositor", "category": "comercio" },
+    { "name": "Ventas", "category": "comercio" },
+    { "name": "Logística", "category": "general" },
+    { "name": "Organización de eventos", "category": "general" },
+    { "name": "Limpieza", "category": "general" },
+    { "name": "Reparto / Delivery", "category": "general" },
+    { "name": "Recepción / Anfitrión", "category": "general" },
+    { "name": "Control de stock", "category": "comercio" }
+  ]
+}
