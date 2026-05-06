@@ -1,27 +1,28 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
 import 'package:workflex/core/widgets/wf_button.dart';
 import 'package:workflex/core/widgets/wf_text_field.dart';
 import 'package:workflex/core/utils/validators.dart';
-import 'package:workflex/core/router/app_router.dart';
-import '../providers/auth_provider.dart';
 
-/// A7 â€” Pantalla de Inicio de SesiÃ³n (RF1.6)
-class LoginScreen extends ConsumerStatefulWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  bool _rememberSession = false; // RF1.6.1
+  bool _rememberSession = false;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -32,26 +33,70 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await ref.read(loginProvider.notifier).login(
-          email: _emailCtrl.text.trim(),
-          password: _passwordCtrl.text,
-          rememberSession: _rememberSession,
-        );
-    if (success && mounted) {
-      // El router redirigirÃ¡ automÃ¡ticamente al dashboard correspondiente
-      // basÃ¡ndose en el rol guardado en Firestore
-      context.go('/freelancer/jobs'); // placeholder, ajustar con rol real
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final auth = FirebaseAuth.instance;
+      final userCredential = await auth.signInWithEmailAndPassword(
+        email: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text,
+      );
+      final uid = userCredential.user!.uid;
+
+      final freelancerDoc = await FirebaseFirestore.instance
+          .collection('freelancers')
+          .doc(uid)
+          .get();
+      if (freelancerDoc.exists) {
+        if (mounted) context.go('/freelancer/jobs');
+        return;
+      }
+
+      final employerDoc = await FirebaseFirestore.instance
+          .collection('employers')
+          .doc(uid)
+          .get();
+      if (employerDoc.exists) {
+        if (mounted) context.go('/employer/home');
+        return;
+      }
+
+      if (mounted) {
+        setState(() => _errorMessage = 'Usuario sin perfil completo.');
+      }
+    } on FirebaseAuthException catch (e) {
+      String mensaje;
+      switch (e.code) {
+        case 'user-not-found':
+          mensaje = 'No existe una cuenta con ese email.';
+          break;
+        case 'wrong-password':
+          mensaje = 'Contraseña incorrecta.';
+          break;
+        case 'invalid-email':
+          mensaje = 'El email no es válido.';
+          break;
+        default:
+          mensaje = 'Error al iniciar sesión. Intenta nuevamente.';
+      }
+      setState(() => _errorMessage = mensaje);
+    } catch (e) {
+      setState(() => _errorMessage = 'Error inesperado: $e');
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final loginState = ref.watch(loginProvider);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Iniciar SesiÃ³n'),
+        title: const Text('Iniciar Sesión'),
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
@@ -67,7 +112,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text('Bienvenido de nuevo', style: AppTextStyles.displayMedium),
                 const SizedBox(height: 8),
                 Text(
-                  'IniciÃ¡ sesiÃ³n para continuar',
+                  'Iniciá sesión para continuar',
                   style: AppTextStyles.bodyLarge.copyWith(
                     color: AppColors.textSecondary,
                   ),
@@ -84,15 +129,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 16),
 
                 WFTextField(
-                  hint: 'MÃ­nimo 6 caracteres',
-                  label: 'ContraseÃ±a',
+                  hint: 'Mínimo 6 caracteres',
+                  label: 'Contraseña',
                   controller: _passwordCtrl,
-                  obscureText: true, // RF1.6 + RNF3.1.7 (ojo incluido en widget)
+                  obscureText: true,
                   validator: AppValidators.validatePassword,
                 ),
                 const SizedBox(height: 8),
 
-                // RF1.6.1 â€” Recordar sesiÃ³n
                 Row(
                   children: [
                     Checkbox(
@@ -102,14 +146,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       activeColor: AppColors.primary,
                     ),
                     Text(
-                      'Recordar sesiÃ³n',
+                      'Recordar sesión',
                       style: AppTextStyles.bodyMedium,
                     ),
                     const Spacer(),
                     TextButton(
-                      onPressed: () {}, // TODO: Recuperar contraseÃ±a
+                      onPressed: () {},
                       child: Text(
-                        'Â¿Olvidaste tu contraseÃ±a?',
+                        '¿Olvidaste tu contraseña?',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primary,
                         ),
@@ -119,8 +163,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
 
-                // Error message
-                if (loginState.error != null)
+                if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -134,7 +177,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            loginState.error!,
+                            _errorMessage!,
                             style: AppTextStyles.bodySmall
                                 .copyWith(color: AppColors.error),
                           ),
@@ -144,18 +187,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 const SizedBox(height: 24),
 
-                WFButton(
-                  label: 'Iniciar SesiÃ³n',
-                  onPressed: _login,
-                  isLoading: loginState.isLoading,
-                ),
+                if (_isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  WFButton(
+                    label: 'Iniciar Sesión',
+                    onPressed: _login,
+                  ),
                 const SizedBox(height: 24),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      'Â¿No tenÃ©s cuenta? ',
+                      '¿No tenés cuenta? ',
                       style: AppTextStyles.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
