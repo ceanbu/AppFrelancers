@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
-import '../models/time_range.dart';
+import 'package:workflex/core/models/time_range.dart';
 
-/// Widget reutilizable para selección de fechas y horarios.
-/// Devuelve un Map<String, List<TimeRange>> donde la clave es "yyyy-MM-dd".
+/// Widget reutilizable para selección de fechas y rangos horarios.
+/// Proporciona un calendario y una lista de días seleccionados con sus horarios.
+/// Recibe:
+///   - initialAvailability: mapa de fechas a lista de rangos.
+///   - onChanged: callback que devuelve el mapa actualizado cuando el usuario modifica algo.
 class WFCalendar extends StatefulWidget {
   final Map<String, List<TimeRange>> initialAvailability;
-  final Function(Map<String, List<TimeRange>>) onSaved;
+  final Function(Map<String, List<TimeRange>>) onChanged;
 
   const WFCalendar({
     super.key,
     this.initialAvailability = const {},
-    required this.onSaved,
+    required this.onChanged,
   });
 
   @override
@@ -31,11 +34,15 @@ class _WFCalendarState extends State<WFCalendar> {
     _availability = Map.from(widget.initialAvailability);
     _selectedDays = {};
     for (var key in _availability.keys) {
-      final date = DateFormat('yyyy-MM-dd').parse(key);
-      _selectedDays.add(date);
+      final date = DateTime.tryParse(key);
+      if (date != null) _selectedDays.add(date);
     }
     _focusedDay = DateTime.now();
     _calendarFormat = CalendarFormat.month;
+  }
+
+  void _notifyParent() {
+    widget.onChanged(_availability);
   }
 
   @override
@@ -58,30 +65,19 @@ class _WFCalendarState extends State<WFCalendar> {
                 _selectedDays.add(selectedDay);
                 _availability[dayKey] = [];
               }
+              _notifyParent();
             });
           },
-          onFormatChanged: (format) {
-            setState(() => _calendarFormat = format);
-          },
+          onFormatChanged: (format) => setState(() => _calendarFormat = format),
           calendarFormat: _calendarFormat,
           calendarStyle: const CalendarStyle(
             selectedDecoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
             todayDecoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 16),
         Expanded(
           child: _buildSelectedDaysList(),
-        ),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: () => widget.onSaved(_availability),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 48),
-          ),
-          child: const Text('Guardar disponibilidad'),
         ),
       ],
     );
@@ -89,7 +85,9 @@ class _WFCalendarState extends State<WFCalendar> {
 
   Widget _buildSelectedDaysList() {
     if (_selectedDays.isEmpty) {
-      return const Center(child: Text('Toca en un día del calendario para seleccionarlo'));
+      return const Center(
+        child: Text('Toca en un día del calendario para seleccionarlo'),
+      );
     }
     final days = _selectedDays.toList()..sort();
     return ListView.builder(
@@ -108,13 +106,16 @@ class _WFCalendarState extends State<WFCalendar> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(DateFormat('EEEE, d MMMM yyyy', 'es_ES').format(day),
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(
+                      DateFormat('EEEE, d MMMM yyyy', 'es_ES').format(day),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     IconButton(
                       icon: const Icon(Icons.delete_outline, color: Colors.red),
                       onPressed: () => setState(() {
                         _selectedDays.remove(day);
                         _availability.remove(dayKey);
+                        _notifyParent();
                       }),
                     ),
                   ],
@@ -126,7 +127,7 @@ class _WFCalendarState extends State<WFCalendar> {
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: Row(
                       children: [
-                        Expanded(child: Text(range.toString())),
+                        Expanded(child: Text(range.format(context))),
                         IconButton(
                           icon: const Icon(Icons.edit, size: 18),
                           onPressed: () => _editTimeRange(day, idx),
@@ -136,6 +137,7 @@ class _WFCalendarState extends State<WFCalendar> {
                           onPressed: () => setState(() {
                             ranges.removeAt(idx);
                             if (ranges.isEmpty) _availability.remove(dayKey);
+                            _notifyParent();
                           }),
                         ),
                       ],
@@ -169,6 +171,7 @@ class _WFCalendarState extends State<WFCalendar> {
       setState(() {
         final key = DateFormat('yyyy-MM-dd').format(day);
         _availability.putIfAbsent(key, () => []).add(range);
+        _notifyParent();
       });
     }
   }
@@ -183,6 +186,7 @@ class _WFCalendarState extends State<WFCalendar> {
     if (newRange != null) {
       setState(() {
         _availability[key]![index] = newRange;
+        _notifyParent();
       });
     }
   }
@@ -194,10 +198,10 @@ class _TimeRangeDialog extends StatefulWidget {
   const _TimeRangeDialog({this.initialStart, this.initialEnd});
 
   @override
-  State<_TimeRangeDialog> createState() => _TimeRangeDialogState();
+  State<_TimeRangeDialog> createState() => __TimeRangeDialogState();
 }
 
-class _TimeRangeDialogState extends State<_TimeRangeDialog> {
+class __TimeRangeDialogState extends State<_TimeRangeDialog> {
   late TimeOfDay _start;
   late TimeOfDay _end;
 

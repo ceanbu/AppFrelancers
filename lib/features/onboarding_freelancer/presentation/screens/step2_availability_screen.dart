@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -42,8 +42,18 @@ class _Step2AvailabilityScreenState extends State<Step2AvailabilityScreen> {
           final date = DateTime.tryParse(entry.key);
           if (date != null) {
             _selectedDays.add(date);
-            final ranges = (entry.value as List).map((r) => TimeRange.fromJson(r)).toList();
-            _availability[entry.key] = ranges;
+            final ranges = (entry.value as List).map((r) {
+              // Usar tryFromJson para evitar errores
+              final range = TimeRange.tryFromJson(r);
+              if (range == null) {
+                print('Rango inválido ignorado: $r');
+                return null;
+              }
+              return range;
+            }).where((r) => r != null).cast<TimeRange>().toList();
+            if (ranges.isNotEmpty) {
+              _availability[entry.key] = ranges;
+            }
           }
         }
       });
@@ -213,6 +223,7 @@ class _Step2AvailabilityScreenState extends State<Step2AvailabilityScreen> {
     setState(() => _isSaving = true);
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
+      // Convertir correctamente cada TimeRange a Map
       final availabilityMap = _availability.map((key, ranges) => MapEntry(key, ranges.map((r) => r.toJson()).toList()));
       await FirebaseFirestore.instance.collection('freelancers').doc(uid).update({
         'availability': availabilityMap,
@@ -221,7 +232,7 @@ class _Step2AvailabilityScreenState extends State<Step2AvailabilityScreen> {
         context.go('/freelancer/register/step3');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: ')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       setState(() => _isSaving = false);
     }

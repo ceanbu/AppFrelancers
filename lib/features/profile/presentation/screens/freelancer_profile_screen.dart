@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
 import 'package:workflex/core/models/time_range.dart';
+import 'edit_availability_screen.dart';
 
 class FreelancerProfileScreen extends StatefulWidget {
   const FreelancerProfileScreen({super.key});
@@ -32,7 +33,6 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
     }
   }
 
-  // Función segura para formatear fecha desde cualquier tipo (Timestamp, String o null)
   String _formatDate(dynamic dateValue) {
     if (dateValue == null) return '';
     if (dateValue is Timestamp) {
@@ -43,10 +43,35 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
         final DateTime parsedDate = DateTime.parse(dateValue);
         return DateFormat('dd/MM/yyyy').format(parsedDate);
       } catch (e) {
-        return dateValue; // si no se puede parsear, devuelve el string original
+        return dateValue;
       }
     }
     return '';
+  }
+
+  Future<void> _editAvailability(Map<String, dynamic> currentAvailability) async {
+    // Convertir el mapa de Firestore a Map<String, List<TimeRange>>
+    Map<String, List<TimeRange>> availabilityMap = {};
+    if (currentAvailability != null && currentAvailability.isNotEmpty) {
+      for (var entry in currentAvailability.entries) {
+        final ranges = (entry.value as List).map((r) => TimeRange.tryFromJson(r)).where((r) => r != null).cast<TimeRange>().toList();
+        if (ranges.isNotEmpty) {
+          availabilityMap[entry.key] = ranges;
+        }
+      }
+    }
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditAvailabilityScreen(currentAvailability: availabilityMap),
+      ),
+    );
+    if (changed == true) {
+      // Recargar los datos del perfil
+      setState(() {
+        _loadUserData();
+      });
+    }
   }
 
   @override
@@ -144,13 +169,19 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _buildSectionTitle('Disponibilidad'),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: _buildAvailabilitySummary(data['availability']),
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSectionTitle('Disponibilidad'),
+                    TextButton.icon(
+                      onPressed: () => _editAvailability(data['availability']),
+                      icon: const Icon(Icons.edit, size: 18),
+                      label: const Text('Editar'),
+                      style: TextButton.styleFrom(foregroundColor: AppColors.primary),
+                    ),
+                  ],
                 ),
+                _buildAvailabilityCard(data['availability']),
                 const SizedBox(height: 24),
                 _buildSectionTitle('Experiencia laboral'),
                 Card(
@@ -158,21 +189,25 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: (data['experience'] as List? ?? []).map<Widget>((exp) {
-                        final start = exp['startDate'] ?? '';
-                        final end = exp['isCurrent'] ? 'Actual' : (exp['endDate'] ?? '');
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(exp['position'] ?? '', style: AppTextStyles.titleMedium),
-                              Text('${exp['company']} · $start - $end', style: AppTextStyles.bodySmall),
-                              if (exp['description'] != null && exp['description'].isNotEmpty)
-                                Text(exp['description'], style: AppTextStyles.bodySmall),
-                              const Divider(),
-                            ],
-                          ),
-                        );
+                        try {
+                          final start = exp['startDate'] ?? '';
+                          final end = exp['isCurrent'] ? 'Actual' : (exp['endDate'] ?? '');
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(exp['position'] ?? '', style: AppTextStyles.titleMedium),
+                                Text('${exp['company']} · $start - $end', style: AppTextStyles.bodySmall),
+                                if (exp['description'] != null && exp['description'].isNotEmpty)
+                                  Text(exp['description'], style: AppTextStyles.bodySmall),
+                                const Divider(),
+                              ],
+                            ),
+                          );
+                        } catch (e) {
+                          return const SizedBox.shrink();
+                        }
                       }).toList(),
                     ),
                   ),
@@ -183,6 +218,64 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
         },
       ),
     );
+  }
+
+  Widget _buildAvailabilityCard(dynamic availability) {
+    try {
+      if (availability == null || availability.isEmpty) {
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('No has definido disponibilidad.', style: AppTextStyles.bodyMedium),
+          ),
+        );
+      }
+      final days = availability.keys.toList()..sort();
+      final children = <Widget>[];
+      for (var day in days) {
+        final rangesData = availability[day] as List;
+        final validRanges = <TimeRange>[];
+        for (var rangeJson in rangesData) {
+          final range = TimeRange.tryFromJson(rangeJson);
+          if (range != null) validRanges.add(range);
+        }
+        if (validRanges.isEmpty) continue;
+        final formattedRanges = validRanges.map((r) => r.format(context)).join(', ');
+        children.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                SizedBox(width: 100, child: Text(DateFormat('dd/MM/yyyy').format(DateTime.parse(day)), style: AppTextStyles.labelMedium)),
+                Expanded(child: Text(formattedRanges, style: AppTextStyles.bodySmall)),
+              ],
+            ),
+          ),
+        );
+      }
+      if (children.isEmpty) {
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text('No hay horarios válidos', style: AppTextStyles.bodyMedium),
+          ),
+        );
+      }
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(children: children),
+        ),
+      );
+    } catch (e) {
+      print('Error en disponibilidad: $e');
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text('Error al cargar la disponibilidad.', style: AppTextStyles.bodySmall.copyWith(color: Colors.red)),
+        ),
+      );
+    }
   }
 
   Widget _buildSectionTitle(String title) {
@@ -207,26 +300,4 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
   }
 
   Widget _buildDivider() => const Divider(height: 16, thickness: 0.5);
-
-  Widget _buildAvailabilitySummary(Map<String, dynamic>? availability) {
-    if (availability == null || availability.isEmpty) {
-      return Text('No has definido disponibilidad.', style: AppTextStyles.bodyMedium);
-    }
-    final days = availability.keys.toList()..sort();
-    return Column(
-      children: days.map((day) {
-        final ranges = (availability[day] as List).map((r) => TimeRange.fromJson(r)).toList();
-        final formattedRanges = ranges.map((r) => r.format(context)).join(', ');
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Row(
-            children: [
-              SizedBox(width: 100, child: Text(day, style: AppTextStyles.labelMedium)),
-              Expanded(child: Text(formattedRanges, style: AppTextStyles.bodySmall)),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
 }

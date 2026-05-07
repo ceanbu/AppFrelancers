@@ -11,18 +11,38 @@ class TimeRange {
   }
 
   Map<String, String> toJson() => {
-    'start': ':',
-    'end': ':',
+    'start': '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}',
+    'end': '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}',
   };
 
-  factory TimeRange.fromJson(Map<String, dynamic> json) {
-    final startParts = json['start'].split(':');
-    final endParts = json['end'].split(':');
-    return TimeRange(
-      start: TimeOfDay(hour: int.parse(startParts[0]), minute: int.parse(startParts[1])),
-      end: TimeOfDay(hour: int.parse(endParts[0]), minute: int.parse(endParts[1])),
-    );
+  // Retorna null si no se puede parsear, en lugar de lanzar excepción
+  static TimeRange? tryFromJson(Map<String, dynamic> json) {
+    try {
+      final startStr = json['start'] as String;
+      final endStr = json['end'] as String;
+      final startParts = startStr.split(':');
+      final endParts = endStr.split(':');
+      if (startParts.length != 2 || endParts.length != 2) return null;
+      final startHour = int.tryParse(startParts[0]);
+      final startMinute = int.tryParse(startParts[1]);
+      final endHour = int.tryParse(endParts[0]);
+      final endMinute = int.tryParse(endParts[1]);
+      if (startHour == null || startMinute == null || endHour == null || endMinute == null) return null;
+      return TimeRange(
+        start: TimeOfDay(hour: startHour, minute: startMinute),
+        end: TimeOfDay(hour: endHour, minute: endMinute),
+      );
+    } catch (e) {
+      return null;
+    }
   }
 
-  String format(BuildContext context) => ' - ';
+  // Mantenemos fromJson para compatibilidad, pero ahora llama a tryFromJson y lanza si es null
+  factory TimeRange.fromJson(Map<String, dynamic> json) {
+    final range = tryFromJson(json);
+    if (range == null) throw FormatException('Formato de horario inválido: $json');
+    return range;
+  }
+
+  String format(BuildContext context) => '${start.format(context)} - ${end.format(context)}';
 }

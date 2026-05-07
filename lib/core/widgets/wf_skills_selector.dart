@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/skills_service.dart';
+import 'package:workflex/services/skills_service.dart';
 
 final skillsListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = SkillsService();
