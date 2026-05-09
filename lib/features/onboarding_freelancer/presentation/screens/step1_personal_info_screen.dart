@@ -48,7 +48,7 @@ class _FreelancerStep1ScreenState extends ConsumerState<FreelancerStep1Screen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: true,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -57,6 +57,10 @@ class _FreelancerStep1ScreenState extends ConsumerState<FreelancerStep1Screen> {
           title: Text(
             'Registro - Paso 1/4',
             style: AppTextStyles.headlineMedium,
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/'),
           ),
         ),
         body: SingleChildScrollView(
