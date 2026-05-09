@@ -10,26 +10,14 @@ class TimeRange {
     }
   }
 
-  Map<String, dynamic> toMap() => {
-    'start': '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}',
-    'end': '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}',
-  };
-
-  factory TimeRange.fromMap(Map<String, dynamic> map) {
-    final range = tryFromMap(map);
-    if (range == null) throw FormatException('Formato de horario inválido: $map');
-    return range;
-  }
-
   Map<String, String> toJson() => {
     'start': '${start.hour.toString().padLeft(2, '0')}:${start.minute.toString().padLeft(2, '0')}',
     'end': '${end.hour.toString().padLeft(2, '0')}:${end.minute.toString().padLeft(2, '0')}',
   };
 
-  // Retorna null si no se puede parsear, en lugar de lanzar excepción
-  static TimeRange? tryFromJson(Map<String, dynamic> json) => tryFromMap(json);
+  Map<String, String> toMap() => toJson();
 
-  static TimeRange? tryFromMap(Map<String, dynamic> json) {
+  static TimeRange? tryFromJson(Map<String, dynamic> json) {
     try {
       final startStr = json['start'] as String;
       final endStr = json['end'] as String;
@@ -50,12 +38,13 @@ class TimeRange {
     }
   }
 
-  // Mantenemos fromJson para compatibilidad, pero ahora llama a tryFromMap y lanza si es null
-  factory TimeRange.fromJson(Map<String, dynamic> json) {
-    final range = tryFromMap(json);
-    if (range == null) throw FormatException('Formato de horario inválido: $json');
+  static TimeRange fromMap(Map<String, dynamic> map) {
+    final range = tryFromJson(map);
+    if (range == null) throw FormatException('Formato de horario inválido: $map');
     return range;
   }
+
+  factory TimeRange.fromJson(Map<String, dynamic> json) => fromMap(json);
 
   String format(BuildContext context) => '${start.format(context)} - ${end.format(context)}';
 }

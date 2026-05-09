@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:workflex/core/models/structured_address.dart';
-import 'package:workflex/core/models/time_range.dart';
+import '../../onboarding_freelancer/domain/freelancer.dart';
 
 enum VacancyStatus { open, paused, filled, closed }
 

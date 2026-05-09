@@ -15,13 +15,7 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        context.go('/employer/home');
-      },
-      child: Scaffold(
+    return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         title: const Text('Crear vacante - Fechas y horarios'),
@@ -29,7 +23,7 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/employer/home'),
+          onPressed: () => context.pop(),
         ),
       ),
       body: Column(
@@ -46,7 +40,7 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
               onPressed: () {
                 if (_schedule.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Selecciona al menos un día y horarios')),
+                    const SnackBar(content: Text('Selecciona al menos un d\xeda y horarios')),
                   );
                   return;
                 }
@@ -62,6 +56,6 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
           ),
         ],
       ),
-    ),);
+    );
   }
 }

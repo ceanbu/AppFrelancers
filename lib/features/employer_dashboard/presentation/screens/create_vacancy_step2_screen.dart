@@ -59,7 +59,7 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
         _workAddress['municipality'] == null || _workAddress['municipality']!.isEmpty ||
         _workAddress['number'] == null || _workAddress['number']!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa la dirección del trabajo (Estado, Municipio y Número)')),
+        const SnackBar(content: Text('Completa la direcci\xf3n del trabajo')),
       );
       return;
     }
@@ -84,7 +84,7 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
       };
       await FirebaseFirestore.instance.collection('vacancies').add(vacancyData);
       if (mounted) {
-        context.go('/employer/home');
+        context.pop(); // regresa al dashboard directamente
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -97,97 +97,91 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) return;
-        context.push('/employer/vacancy/create/step1', extra: _schedule);
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Detalles de la vacante'),
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.push('/employer/vacancy/create/step1', extra: _schedule),
-          ),
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Detalles de la vacante'),
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            WFTextField(
-              controller: _jobTitleController,
-              label: 'Nombre del puesto *',
-              hint: 'Ej: Cocinero',
-              validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: WFTextField(
-                    controller: _remunerationController,
-                    label: 'Remuneración (opcional)',
-                    hint: 'Ej: 1500',
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _remunerationUnit,
-                    decoration: const InputDecoration(
-                      labelText: 'Unidad',
-                      border: OutlineInputBorder(),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              WFTextField(
+                controller: _jobTitleController,
+                label: 'Nombre del puesto *',
+                hint: 'Ej: Cocinero',
+                validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: WFTextField(
+                      controller: _remunerationController,
+                      label: 'Remuneraci\xf3n (opcional)',
+                      hint: 'Ej: 1500',
+                      keyboardType: TextInputType.number,
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'hora', child: Text('por hora')),
-                      DropdownMenuItem(value: 'día', child: Text('por día')),
-                      DropdownMenuItem(value: 'turno', child: Text('por turno')),
-                    ],
-                    onChanged: (value) => setState(() => _remunerationUnit = value),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text('Dirección del trabajo', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            WFAddressIBGE(
-              onAddressChanged: (address) => _workAddress = address,
-            ),
-            const SizedBox(height: 16),
-            const Text('Habilidades requeridas (máx. 6)', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Container(
-              height: 350,
-              child: WFSkillsSelector(
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _remunerationUnit,
+                      decoration: const InputDecoration(
+                        labelText: 'Unidad',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'hora', child: Text('por hora')),
+                        DropdownMenuItem(value: 'd\xeda', child: Text('por d\xeda')),
+                        DropdownMenuItem(value: 'turno', child: Text('por turno')),
+                      ],
+                      onChanged: (value) => setState(() => _remunerationUnit = value),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Direcci\xf3n del trabajo', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              WFAddressIBGE(
+                onAddressChanged: (address) => _workAddress = address,
+              ),
+              const SizedBox(height: 16),
+              const Text('Habilidades requeridas (m\xe1x. 6)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              WFSkillsSelector(
                 title: 'Selecciona habilidades',
                 onSaved: (skills) => _requiredSkills = skills,
               ),
-            ),
-            const SizedBox(height: 16),
-            WFTextField(
-              controller: _descriptionController,
-              label: 'Descripción (opcional)',
-              hint: 'Detalles adicionales...',
-              maxLines: 5,
-            ),
-            const SizedBox(height: 32),
-            if (_isSaving)
-              const Center(child: CircularProgressIndicator())
-            else
-              WFButton(
-                label: 'Publicar vacante',
-                onPressed: _saveVacancy,
+              const SizedBox(height: 16),
+              WFTextField(
+                controller: _descriptionController,
+                label: 'Descripci\xf3n (opcional)',
+                hint: 'Detalles adicionales...',
+                maxLines: 5,
               ),
-          ],
+              const SizedBox(height: 32),
+              if (_isSaving)
+                const Center(child: CircularProgressIndicator())
+              else
+                WFButton(
+                  label: 'Publicar vacante',
+                  onPressed: _saveVacancy,
+                ),
+            ],
+          ),
         ),
       ),
-    ),);
+    );
   }
 }

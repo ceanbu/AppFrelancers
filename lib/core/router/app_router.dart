@@ -17,6 +17,7 @@ import 'package:workflex/features/employer_dashboard/presentation/screens/create
 import 'package:workflex/features/employer_dashboard/presentation/screens/create_vacancy_step2_screen.dart';
 import 'package:workflex/features/employer_dashboard/presentation/screens/vacancy_detail_screen.dart';
 import 'package:workflex/features/employer_dashboard/presentation/screens/applicants_screen.dart';
+import 'package:workflex/features/employer_dashboard/presentation/screens/employer_profile_screen.dart';
 
 // Autenticación
 import 'package:workflex/features/auth/presentation/screens/role_selection_screen.dart';
@@ -106,6 +107,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ApplicantsListScreen(
           vacancyId: state.pathParameters['vacancyId']!,
         ),
+      ),
+      GoRoute(
+        path: '/employer/profile',
+        name: 'employer_profile',
+        builder: (context, state) => const EmployerProfileScreen(),
       ),
     ],
   );
