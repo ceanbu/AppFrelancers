@@ -1,27 +1,26 @@
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Pantallas existentes (freelancer)
-import '../../features/onboarding_freelancer/presentation/screens/step1_personal_info_screen.dart';
-import '../../features/onboarding_freelancer/presentation/screens/step2_availability_screen.dart';
-import '../../features/onboarding_freelancer/presentation/screens/step3_skills_screen.dart';
-import '../../features/onboarding_freelancer/presentation/screens/step4_experience_screen.dart';
-import '../../features/freelancer_jobs/presentation/screens/jobs_feed_screen.dart';
-import '../../features/freelancer_jobs/presentation/screens/job_detail_screen.dart';
-import '../../features/profile/presentation/screens/freelancer_profile_screen.dart';
+import 'package:workflex/features/onboarding_freelancer/presentation/screens/step1_personal_info_screen.dart';
+import 'package:workflex/features/onboarding_freelancer/presentation/screens/step2_availability_screen.dart';
+import 'package:workflex/features/onboarding_freelancer/presentation/screens/step3_skills_screen.dart';
+import 'package:workflex/features/onboarding_freelancer/presentation/screens/step4_experience_screen.dart';
+import 'package:workflex/features/freelancer_jobs/presentation/screens/jobs_feed_screen.dart';
+import 'package:workflex/features/freelancer_jobs/presentation/screens/job_detail_screen.dart';
+import 'package:workflex/features/profile/presentation/screens/freelancer_profile_screen.dart';
 
 // Pantallas empleador
-import '../../features/onboarding_employer/presentation/screens/employer_register_screen.dart';
-import '../../features/employer_dashboard/presentation/screens/employer_home_screen.dart';
-import '../../features/employer_dashboard/presentation/screens/create_vacancy_step1_screen.dart';
-import '../../features/employer_dashboard/presentation/screens/create_vacancy_step2_screen.dart';
-import '../../features/employer_dashboard/presentation/screens/vacancy_detail_screen.dart';
-import '../../features/employer_dashboard/presentation/screens/applicants_screen.dart';
+import 'package:workflex/features/onboarding_employer/presentation/screens/employer_register_screen.dart';
+import 'package:workflex/features/employer_dashboard/presentation/screens/employer_home_screen.dart';
+import 'package:workflex/features/employer_dashboard/presentation/screens/create_vacancy_step1_screen.dart';
+import 'package:workflex/features/employer_dashboard/presentation/screens/create_vacancy_step2_screen.dart';
+import 'package:workflex/features/employer_dashboard/presentation/screens/vacancy_detail_screen.dart';
+import 'package:workflex/features/employer_dashboard/presentation/screens/applicants_screen.dart';
 
 // Autenticación
-import '../../features/auth/presentation/screens/role_selection_screen.dart';
-import '../../features/auth/presentation/screens/login_screen.dart';
+import 'package:workflex/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:workflex/features/auth/presentation/screens/login_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(

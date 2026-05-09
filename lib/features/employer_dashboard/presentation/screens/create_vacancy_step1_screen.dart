@@ -21,6 +21,10 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
         title: const Text('Crear vacante - Fechas y horarios'),
         backgroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
       ),
       body: Column(
         children: [
@@ -36,7 +40,7 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
               onPressed: () {
                 if (_schedule.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Selecciona al menos un dÃ­a y horarios')),
+                    const SnackBar(content: Text('Selecciona al menos un día y horarios')),
                   );
                   return;
                 }
@@ -55,3 +59,4 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
     );
   }
 }
+

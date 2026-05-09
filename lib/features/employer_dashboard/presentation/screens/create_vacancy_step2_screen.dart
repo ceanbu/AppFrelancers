@@ -59,7 +59,7 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
         _workAddress['municipality'] == null || _workAddress['municipality']!.isEmpty ||
         _workAddress['number'] == null || _workAddress['number']!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa la direcci贸n del trabajo (Estado, Municipio y N煤mero)')),
+        const SnackBar(content: Text('Completa la direcci髇 del trabajo')),
       );
       return;
     }
@@ -84,7 +84,7 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
       };
       await FirebaseFirestore.instance.collection('vacancies').add(vacancyData);
       if (mounted) {
-        context.go('/employer/home');
+        context.pop(); // regresa al dashboard directamente
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -103,81 +103,86 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
         title: const Text('Detalles de la vacante'),
         backgroundColor: AppColors.surface,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            WFTextField(
-              controller: _jobTitleController,
-              label: 'Nombre del puesto *',
-              hint: 'Ej: Cocinero',
-              validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: WFTextField(
-                    controller: _remunerationController,
-                    label: 'Remuneraci贸n (opcional)',
-                    hint: 'Ej: 1500',
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _remunerationUnit,
-                    decoration: const InputDecoration(
-                      labelText: 'Unidad',
-                      border: OutlineInputBorder(),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              WFTextField(
+                controller: _jobTitleController,
+                label: 'Nombre del puesto *',
+                hint: 'Ej: Cocinero',
+                validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: WFTextField(
+                      controller: _remunerationController,
+                      label: 'Remuneraci髇 (opcional)',
+                      hint: 'Ej: 1500',
+                      keyboardType: TextInputType.number,
                     ),
-                    items: const [
-                      DropdownMenuItem(value: 'hora', child: Text('por hora')),
-                      DropdownMenuItem(value: 'd铆a', child: Text('por d铆a')),
-                      DropdownMenuItem(value: 'turno', child: Text('por turno')),
-                    ],
-                    onChanged: (value) => setState(() => _remunerationUnit = value),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text('Direcci贸n del trabajo', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            WFAddressIBGE(
-              onAddressChanged: (address) => _workAddress = address,
-            ),
-            const SizedBox(height: 16),
-            const Text('Habilidades requeridas (m谩x. 6)', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Container(
-              height: 350,
-              child: WFSkillsSelector(
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _remunerationUnit,
+                      decoration: const InputDecoration(
+                        labelText: 'Unidad',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'hora', child: Text('por hora')),
+                        DropdownMenuItem(value: 'd韆', child: Text('por d韆')),
+                        DropdownMenuItem(value: 'turno', child: Text('por turno')),
+                      ],
+                      onChanged: (value) => setState(() => _remunerationUnit = value),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Text('Direcci髇 del trabajo', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              WFAddressIBGE(
+                onAddressChanged: (address) => _workAddress = address,
+              ),
+              const SizedBox(height: 16),
+              const Text('Habilidades requeridas (m醲. 6)', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              WFSkillsSelector(
                 title: 'Selecciona habilidades',
                 onSaved: (skills) => _requiredSkills = skills,
               ),
-            ),
-            const SizedBox(height: 16),
-            WFTextField(
-              controller: _descriptionController,
-              label: 'Descripci贸n (opcional)',
-              hint: 'Detalles adicionales...',
-              maxLines: 5,
-            ),
-            const SizedBox(height: 32),
-            if (_isSaving)
-              const Center(child: CircularProgressIndicator())
-            else
-              WFButton(
-                label: 'Publicar vacante',
-                onPressed: _saveVacancy,
+              const SizedBox(height: 16),
+              WFTextField(
+                controller: _descriptionController,
+                label: 'Descripci髇 (opcional)',
+                hint: 'Detalles adicionales...',
+                maxLines: 5,
               ),
-          ],
+              const SizedBox(height: 32),
+              if (_isSaving)
+                const Center(child: CircularProgressIndicator())
+              else
+                WFButton(
+                  label: 'Publicar vacante',
+                  onPressed: _saveVacancy,
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
