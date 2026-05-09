@@ -44,11 +44,12 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
 
   Future<void> _loadApplicants() async {
     try {
+      // Cargamos todas las aplicaciones (pendientes y contactadas)
       final snapshot = await FirebaseFirestore.instance
           .collection('applications')
           .where('vacantId', isEqualTo: widget.vacancyId)
-          .where('status', isEqualTo: 'pending')
           .get();
+
       debugPrint('📋 Aplicaciones encontradas: ${snapshot.docs.length}');
       final List<Map<String, dynamic>> applicantsList = [];
       for (var doc in snapshot.docs) {
@@ -66,6 +67,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
             'experience': freelancerDoc['experience'] ?? [],
             'phone': freelancerDoc['phone'] ?? '',
             'availability': freelancerDoc['availability'] ?? {},
+            'applicationStatus': data['status'] ?? 'pending',
           });
         }
       }
@@ -91,15 +93,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Match realizado con éxito')),
       );
-      final whatsappUrl = 'https://wa.me/${phone.replaceAll(RegExp(r'[^\d+]'), '')}?text=Hola!%20Has%20sido%20seleccionado%20para%20la%20vacante.';
-      final uri = Uri.parse(whatsappUrl);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir WhatsApp')),
-        );
-      }
+      _launchWhatsApp(phone);
       _loadApplicants();
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -157,18 +151,24 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     return null;
   }
 
-  void _goToHome() {
-    final goRouter = GoRouter.of(context);
-    if (goRouter.canPop()) {
-      goRouter.pop();
+  Future<void> _launchWhatsApp(String phone) async {
+    final cleanPhone = phone.replaceAll(RegExp(r'\D'), '');
+    final whatsappUrl = 'https://wa.me/$cleanPhone?text=Hola!%20Has%20sido%20seleccionado%20para%20la%20vacante.';
+    final uri = Uri.parse(whatsappUrl);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      // No hay pantalla anterior, redirigir al home del empleador
-      // Usamos WidgetsBinding para asegurar que el contexto sigue montado
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          goRouter.go('/employer/home');
-        }
-      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir WhatsApp. Verifica si la app está instalada.')),
+        );
+      }
+    }
+  }
+
+  void _goToHome() {
+    if (mounted) {
+      context.go('/employer/home');
     }
   }
 
@@ -176,7 +176,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) async {
+      onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
         _goToHome();
       },
@@ -268,29 +268,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
                       ],
                     ),
                   const SizedBox(height: 24),
-                  if (_matchedFreelancerId != null && _matchedFreelancerId!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          final freelancer = _getMatchedFreelancer();
-                          if (freelancer != null) {
-                            final phone = freelancer['phone'];
-                            final whatsappUrl = 'https://wa.me/${phone.replaceAll(RegExp(r'[^\d+]'), '')}?text=Hola!%20Has%20sido%20seleccionado%20para%20la%20vacante.';
-                            final uri = Uri.parse(whatsappUrl);
-                            if (await canLaunchUrl(uri)) {
-                              await launchUrl(uri, mode: LaunchMode.externalApplication);
-                            }
-                          }
-                        },
-                        icon: const Icon(Icons.chat),
-                        label: const Text('Contactar por WhatsApp'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
+                  _buildSelectedFreelancersSection(),
                   _buildApplicantsSection(),
                 ],
               ),
@@ -301,13 +279,45 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     );
   }
 
+  Widget _buildSelectedFreelancersSection() {
+    final selected = _applicants.where((a) => a['applicationStatus'] == 'contacted').toList();
+    if (selected.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Postulantes seleccionados', style: AppTextStyles.headlineMedium),
+        const SizedBox(height: 8),
+        ...selected.map((freelancer) => Card(
+          color: Colors.green.withOpacity(0.05),
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            title: Text(freelancer['name'], style: AppTextStyles.titleMedium),
+            subtitle: Text('Contactar para coordinar detalles'),
+            trailing: ElevatedButton.icon(
+              onPressed: () => _launchWhatsApp(freelancer['phone']),
+              icon: const Icon(Icons.chat, size: 18),
+              label: const Text('WhatsApp'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        )).toList(),
+        const Divider(height: 32),
+      ],
+    );
+  }
+
   Widget _buildApplicantsSection() {
-    if (_applicants.isEmpty) {
+    final pending = _applicants.where((a) => a['applicationStatus'] == 'pending').toList();
+    if (pending.isEmpty) {
       if (_isLoading) return const SizedBox.shrink();
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text('No hay postulantes aún.', style: AppTextStyles.bodyMedium),
+          child: Text('No hay postulantes pendientes.', style: AppTextStyles.bodyMedium),
         ),
       );
     }
@@ -317,7 +327,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Postulantes (${_applicants.length})', style: AppTextStyles.headlineMedium),
+            Text('Postulantes (${pending.length})', style: AppTextStyles.headlineMedium),
             TextButton(
               onPressed: () => context.push('/employer/vacancy/${widget.vacancyId}/applicants'),
               child: const Text('Ver todos'),
@@ -329,9 +339,9 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
           height: 280,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: _applicants.length > 5 ? 5 : _applicants.length,
+            itemCount: pending.length > 5 ? 5 : pending.length,
             itemBuilder: (context, index) {
-              final applicant = _applicants[index];
+              final applicant = pending[index];
               return Container(
                 width: 280,
                 margin: const EdgeInsets.only(right: 12),
