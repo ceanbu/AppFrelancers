@@ -15,17 +15,23 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[100],
-      appBar: AppBar(
-        title: const Text('Crear vacante - Fechas y horarios'),
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.go('/employer/home');
+      },
+      child: Scaffold(
+        backgroundColor: Colors.grey[100],
+        appBar: AppBar(
+          title: const Text('Crear vacante - Fechas y horarios'),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/employer/home'),
+          ),
         ),
-      ),
       body: Column(
         children: [
           Expanded(
@@ -56,6 +62,6 @@ class _CreateVacancyStep1ScreenState extends State<CreateVacancyStep1Screen> {
           ),
         ],
       ),
-    );
+    ),);
   }
 }

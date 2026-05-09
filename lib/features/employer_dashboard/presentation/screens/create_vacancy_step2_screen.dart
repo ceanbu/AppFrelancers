@@ -97,17 +97,23 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Detalles de la vacante'),
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        context.push('/employer/vacancy/create/step1', extra: _schedule);
+      },
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Detalles de la vacante'),
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.push('/employer/vacancy/create/step1', extra: _schedule),
+          ),
         ),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -182,6 +188,6 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
           ),
         ),
       ),
-    );
+    ),);
   }
 }
