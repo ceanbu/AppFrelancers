@@ -29,7 +29,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('applications')
-          .where('vacantId', isEqualTo: widget.vacancyId)
+          .where('vacancyId', isEqualTo: widget.vacancyId)
           .where('status', isEqualTo: 'pending')
           .get();
       debugPrint('?? Aplicaciones en lista: ${snapshot.docs.length}');
