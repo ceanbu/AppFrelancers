@@ -46,7 +46,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('applications')
-          .where('vacantId', isEqualTo: widget.vacancyId)
+          .where('vacancyId', isEqualTo: widget.vacancyId)
           .where('status', isEqualTo: 'pending')
           .get();
       debugPrint('📋 Aplicaciones encontradas: ${snapshot.docs.length}');
