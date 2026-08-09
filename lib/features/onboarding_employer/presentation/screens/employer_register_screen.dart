@@ -7,7 +7,7 @@ import 'package:workflex/core/widgets/wf_button.dart';
 import 'package:workflex/core/widgets/wf_text_field.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
-import 'package:workflex/features/onboarding_employer/presentation/widgets/wf_address_ibge.dart';
+import 'package:workflex/core/widgets/wf_address_ibge.dart';
 
 class EmployerRegisterScreen extends StatefulWidget {
   const EmployerRegisterScreen({super.key});

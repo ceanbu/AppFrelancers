@@ -8,7 +8,7 @@ import 'package:workflex/core/widgets/wf_skills_selector.dart';
 import 'package:workflex/core/models/time_range.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
-import 'package:workflex/features/onboarding_employer/presentation/widgets/wf_address_ibge.dart';
+import 'package:workflex/core/widgets/wf_address_ibge.dart';
 
 class CreateVacancyStep2Screen extends StatefulWidget {
   const CreateVacancyStep2Screen({super.key});

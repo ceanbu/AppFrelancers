@@ -7,7 +7,7 @@ import '../../../../core/widgets/wf_text_field.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
-import '../widgets/address_ibge_widget.dart';
+import 'package:workflex/core/widgets/wf_address_ibge.dart';
 
 class FreelancerStep1Screen extends ConsumerStatefulWidget {
   const FreelancerStep1Screen({super.key});
@@ -206,7 +206,7 @@ class _FreelancerStep1ScreenState extends ConsumerState<FreelancerStep1Screen> {
                   style: AppTextStyles.headlineMedium,
                 ),
                 const SizedBox(height: 8),
-                AddressIbgeWidget(
+                WFAddressIBGE(
                   onAddressChanged: (addressMap) => _address = addressMap,
                 ),
                 const SizedBox(height: 32),
