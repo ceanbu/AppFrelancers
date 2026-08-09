@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+Ôªøimport 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workflex/services/ibge_service.dart';
 
@@ -58,7 +58,7 @@ class _WFAddressIBGEState extends ConsumerState<WFAddressIBGE> {
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Error al cargar estados: ';
+        _errorMessage = 'Error al cargar estados: $e';
         _isLoadingEstados = false;
       });
     }
@@ -67,7 +67,11 @@ class _WFAddressIBGEState extends ConsumerState<WFAddressIBGE> {
   void _onEstadoChanged(String? estadoId) {
     setState(() {
       _selectedEstadoId = estadoId;
-      final selected = _estados.firstWhere((e) => e['id'].toString() == estadoId);
+      final selected = _estados.firstWhere(
+        (e) => e['id'].toString() == estadoId,
+        orElse: () => {},
+      );
+      if (selected.isEmpty) return;
       _selectedEstadoNome = selected['nome'];
       _selectedMunicipioId = null;
       _selectedMunicipioNome = null;
@@ -76,7 +80,7 @@ class _WFAddressIBGEState extends ConsumerState<WFAddressIBGE> {
         if (idInt != null) {
           _municipiosFuture = _ibgeService.getMunicipios(idInt);
         } else {
-          _municipiosFuture = Future.error('ID inv·lido');
+          _municipiosFuture = Future.error('ID inv√°lido');
         }
       } else {
         _municipiosFuture = null;
@@ -134,7 +138,7 @@ class _WFAddressIBGEState extends ConsumerState<WFAddressIBGE> {
                 return const CircularProgressIndicator();
               }
               if (snapshot.hasError) {
-                return Text('Error: ', style: const TextStyle(color: Colors.red));
+                return Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red));
               }
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Text('No hay municipios disponibles', style: TextStyle(color: Colors.orange));
@@ -189,11 +193,11 @@ class _WFAddressIBGEState extends ConsumerState<WFAddressIBGE> {
         TextFormField(
           controller: _numberController,
           decoration: const InputDecoration(
-            labelText: 'N˙mero *',
+            labelText: 'N√∫mero *',
             hintText: 'Ej: 123',
             border: OutlineInputBorder(),
           ),
-          validator: (value) => value == null || value.isEmpty ? 'Ingrese el n˙mero' : null,
+          validator: (value) => value == null || value.isEmpty ? 'Ingrese el n√∫mero' : null,
           onChanged: (_) => _notifyParent(),
         ),
         const SizedBox(height: 16),
