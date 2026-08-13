@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:workflex/services/skills_service.dart';
+import 'package:workflex/core/constants/app_colors.dart';
 
 final skillsListProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = SkillsService();
@@ -55,7 +56,8 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('Seleccionadas (/6)'),
+            Text('Seleccionadas (${_selected.length}/6)',
+                style: const TextStyle(fontWeight: FontWeight.w500)),
             if (_selected.isNotEmpty)
               TextButton(
                 onPressed: () => setState(() => _selected.clear()),
@@ -63,13 +65,20 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
               ),
           ],
         ),
-        Wrap(
-          spacing: 8,
-          children: _selected.map((skill) => Chip(
-            label: Text(skill),
-            onDeleted: () => setState(() => _selected.remove(skill)),
-          )).toList(),
-        ),
+        if (_selected.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _selected.map((skill) => Chip(
+              label: Text(skill,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+              backgroundColor: AppColors.primary,
+              deleteIconColor: Colors.white,
+              onDeleted: () => setState(() => _selected.remove(skill)),
+            )).toList(),
+          ),
+        ],
         const SizedBox(height: 12),
         TextField(
           controller: _searchController,
@@ -83,19 +92,26 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
         Expanded(
           child: skillsAsync.when(
             data: (skills) {
-              final filtered = skills.where((skill) =>
-                  skill['name'].toLowerCase().contains(_searchQuery)).toList();
+              final filtered = skills
+                  .where((skill) =>
+                      skill['name'].toString().toLowerCase().contains(_searchQuery))
+                  .toList();
               return ListView.builder(
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
                   final skill = filtered[index];
-                  final name = skill['name'];
+                  final name = skill['name'] as String;
                   final isSelected = _selected.contains(name);
+                  final atLimit = _selected.length >= 6 && !isSelected;
                   return CheckboxListTile(
-                    title: Text(name),
+                    title: Text(name,
+                        style: TextStyle(
+                            color: atLimit ? Colors.grey : null)),
                     value: isSelected,
-                    onChanged: (_selected.length < 6 || isSelected)
-                        ? (value) {
+                    activeColor: AppColors.primary,
+                    onChanged: atLimit
+                        ? null
+                        : (value) {
                             setState(() {
                               if (value == true) {
                                 _selected.add(name);
@@ -103,21 +119,21 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
                                 _selected.remove(name);
                               }
                             });
-                          }
-                        : null,
+                          },
                   );
                 },
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: ')),
+            error: (err, stack) =>
+                Center(child: Text('Error al cargar habilidades: $err')),
           ),
         ),
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: () => widget.onSaved(_selected),
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
+            backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
             minimumSize: const Size(double.infinity, 48),
           ),

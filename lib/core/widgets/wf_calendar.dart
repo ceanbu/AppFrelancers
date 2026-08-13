@@ -1,13 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:workflex/core/models/time_range.dart';
+import 'package:workflex/core/constants/app_colors.dart';
 
-/// Widget reutilizable para selección de fechas y rangos horarios.
-/// Proporciona un calendario y una lista de días seleccionados con sus horarios.
-/// Recibe:
-///   - initialAvailability: mapa de fechas a lista de rangos.
-///   - onChanged: callback que devuelve el mapa actualizado cuando el usuario modifica algo.
 class WFCalendar extends StatefulWidget {
   final Map<String, List<TimeRange>> initialAvailability;
   final Function(Map<String, List<TimeRange>>) onChanged;
@@ -26,7 +22,6 @@ class _WFCalendarState extends State<WFCalendar> {
   late Map<String, List<TimeRange>> _availability;
   late Set<DateTime> _selectedDays;
   late DateTime _focusedDay;
-  late CalendarFormat _calendarFormat;
 
   @override
   void initState() {
@@ -38,12 +33,9 @@ class _WFCalendarState extends State<WFCalendar> {
       if (date != null) _selectedDays.add(date);
     }
     _focusedDay = DateTime.now();
-    _calendarFormat = CalendarFormat.month;
   }
 
-  void _notifyParent() {
-    widget.onChanged(_availability);
-  }
+  void _notifyParent() => widget.onChanged(_availability);
 
   @override
   Widget build(BuildContext context) {
@@ -53,13 +45,23 @@ class _WFCalendarState extends State<WFCalendar> {
           firstDay: DateTime.now(),
           lastDay: DateTime.now().add(const Duration(days: 365)),
           focusedDay: _focusedDay,
-          selectedDayPredicate: (day) => _selectedDays.contains(day),
+          calendarFormat: CalendarFormat.month,
+          availableCalendarFormats: const {CalendarFormat.month: 'Mes'},
+          selectedDayPredicate: (day) => _selectedDays.any((d) =>
+              d.year == day.year && d.month == day.month && d.day == day.day),
           onDaySelected: (selectedDay, focusedDay) {
             setState(() {
               _focusedDay = focusedDay;
               final dayKey = DateFormat('yyyy-MM-dd').format(selectedDay);
-              if (_selectedDays.contains(selectedDay)) {
-                _selectedDays.remove(selectedDay);
+              final alreadySelected = _selectedDays.any((d) =>
+                  d.year == selectedDay.year &&
+                  d.month == selectedDay.month &&
+                  d.day == selectedDay.day);
+              if (alreadySelected) {
+                _selectedDays.removeWhere((d) =>
+                    d.year == selectedDay.year &&
+                    d.month == selectedDay.month &&
+                    d.day == selectedDay.day);
                 _availability.remove(dayKey);
               } else {
                 _selectedDays.add(selectedDay);
@@ -68,17 +70,19 @@ class _WFCalendarState extends State<WFCalendar> {
               _notifyParent();
             });
           },
-          onFormatChanged: (format) => setState(() => _calendarFormat = format),
-          calendarFormat: _calendarFormat,
+          onPageChanged: (focusedDay) => setState(() => _focusedDay = focusedDay),
           calendarStyle: const CalendarStyle(
-            selectedDecoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+            selectedDecoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
             todayDecoration: BoxDecoration(color: Colors.orange, shape: BoxShape.circle),
           ),
+          headerStyle: const HeaderStyle(
+            formatButtonVisible: false,
+            titleCentered: true,
+          ),
+          locale: 'es_ES',
         ),
         const SizedBox(height: 16),
-        Expanded(
-          child: _buildSelectedDaysList(),
-        ),
+        Expanded(child: _buildSelectedDaysList()),
       ],
     );
   }
@@ -86,7 +90,8 @@ class _WFCalendarState extends State<WFCalendar> {
   Widget _buildSelectedDaysList() {
     if (_selectedDays.isEmpty) {
       return const Center(
-        child: Text('Toca en un día del calendario para seleccionarlo'),
+        child: Text('Toca un día del calendario para seleccionarlo',
+            style: TextStyle(color: Colors.grey)),
       );
     }
     final days = _selectedDays.toList()..sort();
@@ -135,8 +140,10 @@ class _WFCalendarState extends State<WFCalendar> {
                         IconButton(
                           icon: const Icon(Icons.delete, size: 18, color: Colors.red),
                           onPressed: () => setState(() {
-                            ranges.removeAt(idx);
-                            if (ranges.isEmpty) _availability.remove(dayKey);
+                            _availability[dayKey]!.removeAt(idx);
+                            if (_availability[dayKey]!.isEmpty) {
+                              _availability.remove(dayKey);
+                            }
                             _notifyParent();
                           }),
                         ),
@@ -147,12 +154,14 @@ class _WFCalendarState extends State<WFCalendar> {
                 if (ranges.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Text('Sin horarios definidos', style: TextStyle(color: Colors.grey)),
+                    child: Text('Sin horarios definidos',
+                        style: TextStyle(color: Colors.grey)),
                   ),
                 TextButton.icon(
                   onPressed: () => _addTimeRange(day),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Añadir horario'),
+                  icon: const Icon(Icons.add, color: AppColors.primary),
+                  label: const Text('Añadir horario',
+                      style: TextStyle(color: AppColors.primary)),
                 ),
               ],
             ),
@@ -181,7 +190,8 @@ class _WFCalendarState extends State<WFCalendar> {
     final oldRange = _availability[key]![index];
     final newRange = await showDialog<TimeRange>(
       context: context,
-      builder: (_) => _TimeRangeDialog(initialStart: oldRange.start, initialEnd: oldRange.end),
+      builder: (_) => _TimeRangeDialog(
+          initialStart: oldRange.start, initialEnd: oldRange.end),
     );
     if (newRange != null) {
       setState(() {
@@ -215,13 +225,14 @@ class __TimeRangeDialogState extends State<_TimeRangeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Horario'),
+      title: const Text('Definir horario'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
             title: const Text('Hora de inicio'),
-            trailing: Text(_start.format(context)),
+            trailing: Text(_start.format(context),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             onTap: () async {
               final time = await showTimePicker(context: context, initialTime: _start);
               if (time != null) setState(() => _start = time);
@@ -229,7 +240,8 @@ class __TimeRangeDialogState extends State<_TimeRangeDialog> {
           ),
           ListTile(
             title: const Text('Hora de fin'),
-            trailing: Text(_end.format(context)),
+            trailing: Text(_end.format(context),
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             onTap: () async {
               final time = await showTimePicker(context: context, initialTime: _end);
               if (time != null) setState(() => _end = time);
@@ -238,14 +250,17 @@ class __TimeRangeDialogState extends State<_TimeRangeDialog> {
         ],
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar')),
         TextButton(
           onPressed: () {
             try {
               final range = TimeRange(start: _start, end: _end);
               Navigator.pop(context, range);
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(content: Text(e.toString())));
             }
           },
           child: const Text('Aceptar'),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
 import 'package:workflex/core/widgets/wf_button.dart';
@@ -11,7 +12,6 @@ import 'package:workflex/core/utils/validators.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
-
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
@@ -33,12 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
+    setState(() { _isLoading = true; _errorMessage = null; });
     try {
       final auth = FirebaseAuth.instance;
       final userCredential = await auth.signInWithEmailAndPassword(
@@ -47,41 +42,36 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       final uid = userCredential.user!.uid;
 
-      final freelancerDoc = await FirebaseFirestore.instance
-          .collection('freelancers')
-          .doc(uid)
-          .get();
+      final freelancerDoc = await FirebaseFirestore.instance.collection('freelancers').doc(uid).get();
       if (freelancerDoc.exists) {
+        if (_rememberSession) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_role', 'freelancer');
+          await prefs.setBool('remember_session', true);
+        }
         if (mounted) context.go('/freelancer/jobs');
         return;
       }
 
-      final employerDoc = await FirebaseFirestore.instance
-          .collection('employers')
-          .doc(uid)
-          .get();
+      final employerDoc = await FirebaseFirestore.instance.collection('employers').doc(uid).get();
       if (employerDoc.exists) {
+        if (_rememberSession) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('user_role', 'employer');
+          await prefs.setBool('remember_session', true);
+        }
         if (mounted) context.go('/employer/home');
         return;
       }
 
-      if (mounted) {
-        setState(() => _errorMessage = 'Usuario sin perfil completo.');
-      }
+      if (mounted) setState(() => _errorMessage = 'Usuario sin perfil completo.');
     } on FirebaseAuthException catch (e) {
       String mensaje;
       switch (e.code) {
-        case 'user-not-found':
-          mensaje = 'No existe una cuenta con ese email.';
-          break;
-        case 'wrong-password':
-          mensaje = 'Contraseña incorrecta.';
-          break;
-        case 'invalid-email':
-          mensaje = 'El email no es válido.';
-          break;
-        default:
-          mensaje = 'Error al iniciar sesión. Intenta nuevamente.';
+        case 'user-not-found': mensaje = 'No existe una cuenta con ese email.'; break;
+        case 'wrong-password': mensaje = 'Contraseña incorrecta.'; break;
+        case 'invalid-email': mensaje = 'El email no es válido.'; break;
+        default: mensaje = 'Error al iniciar sesión. Intenta nuevamente.';
       }
       setState(() => _errorMessage = mensaje);
     } catch (e) {
@@ -111,58 +101,40 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 32),
                 Text('Bienvenido de nuevo', style: AppTextStyles.displayMedium),
                 const SizedBox(height: 8),
-                Text(
-                  'Iniciá sesión para continuar',
-                  style: AppTextStyles.bodyLarge.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
+                Text('Iniciá sesión para continuar',
+                    style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary)),
                 const SizedBox(height: 40),
-
                 WFTextField(
-                  hint: 'tu@email.com',
-                  label: 'Email',
+                  hint: 'tu@email.com', label: 'Email',
                   controller: _emailCtrl,
                   keyboardType: TextInputType.emailAddress,
                   validator: AppValidators.validateEmail,
                 ),
                 const SizedBox(height: 16),
-
                 WFTextField(
-                  hint: 'Mínimo 6 caracteres',
-                  label: 'Contraseña',
+                  hint: 'Mínimo 6 caracteres', label: 'Contraseña',
                   controller: _passwordCtrl,
                   obscureText: true,
                   validator: AppValidators.validatePassword,
                 ),
                 const SizedBox(height: 8),
-
                 Row(
                   children: [
                     Checkbox(
                       value: _rememberSession,
-                      onChanged: (v) =>
-                          setState(() => _rememberSession = v ?? false),
+                      onChanged: (v) => setState(() => _rememberSession = v ?? false),
                       activeColor: AppColors.primary,
                     ),
-                    Text(
-                      'Recordar sesión',
-                      style: AppTextStyles.bodyMedium,
-                    ),
+                    Text('Recordar sesión', style: AppTextStyles.bodyMedium),
                     const Spacer(),
                     TextButton(
                       onPressed: () {},
-                      child: Text(
-                        '¿Olvidaste tu contraseña?',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
+                      child: Text('¿Olvidaste tu contraseña?',
+                          style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary)),
                     ),
                   ],
                 ),
                 const SizedBox(height: 8),
-
                 if (_errorMessage != null)
                   Container(
                     padding: const EdgeInsets.all(12),
@@ -172,48 +144,29 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.error_outline,
-                            color: AppColors.error, size: 18),
+                        const Icon(Icons.error_outline, color: AppColors.error, size: 18),
                         const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: AppTextStyles.bodySmall
-                                .copyWith(color: AppColors.error),
-                          ),
-                        ),
+                        Expanded(child: Text(_errorMessage!,
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.error))),
                       ],
                     ),
                   ),
                 const SizedBox(height: 24),
-
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
                 else
-                  WFButton(
-                    label: 'Iniciar Sesión',
-                    onPressed: _login,
-                  ),
+                  WFButton(label: 'Iniciar Sesión', onPressed: _login),
                 const SizedBox(height: 24),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '¿No tenés cuenta? ',
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
+                    Text('¿No tenés cuenta? ',
+                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                     GestureDetector(
                       onTap: () => context.go('/'),
-                      child: Text(
-                        'Registrate',
-                        style: AppTextStyles.bodyMedium.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: Text('Registrate',
+                          style: AppTextStyles.bodyMedium.copyWith(
+                              color: AppColors.primary, fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),

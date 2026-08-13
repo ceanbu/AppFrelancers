@@ -210,6 +210,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
               return const Center(child: Text('Vacante no encontrada'));
             }
             final data = snapshot.data!.data() as Map<String, dynamic>;
+            final workAddress = (data['workAddress'] as Map<String, dynamic>?) ?? {};
             final schedule = data['schedule'] as Map<String, dynamic>? ?? {};
             final scheduleSummary = schedule.isNotEmpty
                 ? 'Disponible en ${schedule.keys.length} día(s)'
@@ -239,7 +240,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
                   Text('Dirección', style: AppTextStyles.headlineMedium),
                   const SizedBox(height: 4),
                   Text(
-                    '${data['workAddress']['street'] ?? ''} ${data['workAddress']['number'] ?? ''}, ${data['workAddress']['neighborhood'] ?? ''}\n${data['workAddress']['municipality'] ?? ''} - ${data['workAddress']['state'] ?? ''}',
+                    '${workAddress['street'] ?? ''} ${workAddress['number'] ?? ''}, ${workAddress['neighborhood'] ?? ''}\n${workAddress['municipality'] ?? ''} - ${workAddress['state'] ?? ''}',
                     style: AppTextStyles.bodyMedium,
                   ),
                   const SizedBox(height: 16),

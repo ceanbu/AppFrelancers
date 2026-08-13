@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
@@ -58,29 +58,26 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (!_isRepAgeValid) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El representante debe ser mayor de 18 aÃ±os')),
+        const SnackBar(content: Text('El representante debe ser mayor de 18 años')),
       );
       return;
     }
-    if (_address['state'] == null || _address['state']!.isEmpty ||
-        _address['municipality'] == null || _address['municipality']!.isEmpty ||
-        _address['number'] == null || _address['number']!.isEmpty) {
+    if ((_address['state'] ?? '').isEmpty ||
+        (_address['municipality'] ?? '').isEmpty ||
+        (_address['number'] ?? '').isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa los campos obligatorios de direcciÃ³n: Estado, Municipio y NÃºmero')),
+        const SnackBar(content: Text('Completa los campos obligatorios: Estado, Municipio y Número')),
       );
       return;
     }
-
     setState(() => _isLoading = true);
     try {
-      final auth = FirebaseAuth.instance;
-      final userCredential = await auth.createUserWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
       final uid = userCredential.user!.uid;
-
-      final employerData = {
+      await FirebaseFirestore.instance.collection('employers').doc(uid).set({
         'email': _emailController.text.trim(),
         'businessName': _businessNameController.text.trim(),
         'businessType': _businessType,
@@ -93,22 +90,16 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
         'address': _address,
         'credits': 0,
         'createdAt': FieldValue.serverTimestamp(),
-      };
-      await FirebaseFirestore.instance.collection('employers').doc(uid).set(employerData);
-
-      if (mounted) {
-        context.go('/employer/home');
-      }
+      });
+      if (mounted) context.go('/employer/home');
     } on FirebaseAuthException catch (e) {
-      String mensaje;
-      if (e.code == 'email-already-in-use') {
-        mensaje = 'Este correo ya estÃ¡ en uso.';
-      } else {
-        mensaje = 'Error al registrar: ${e.message}';
-      }
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(mensaje)));
+      final msg = e.code == 'email-already-in-use'
+          ? 'Este correo ya está en uso.'
+          : 'Error al registrar: ${e.message}';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error inesperado: $e')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error inesperado: $e')));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -142,37 +133,38 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
                   keyboardType: TextInputType.emailAddress,
                   validator: (value) {
                     if (value == null || value.isEmpty) return 'Ingrese el email';
-                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                      return 'Email no vÃ¡lido';
-                    }
+                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value))
+                      return 'Email no válido';
                     return null;
                   },
                 ),
                 const SizedBox(height: 16),
                 WFTextField(
                   controller: _passwordController,
-                  label: 'ContraseÃ±a *',
-                  hint: 'MÃ­nimo 6 caracteres',
+                  label: 'Contraseña *',
+                  hint: 'Mínimo 6 caracteres',
                   obscureText: _obscurePassword,
                   suffixIcon: IconButton(
                     icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
                     onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                   ),
-                  validator: (value) => value == null || value.length < 6 ? 'MÃ­nimo 6 caracteres' : null,
+                  validator: (value) =>
+                      value == null || value.length < 6 ? 'Mínimo 6 caracteres' : null,
                 ),
                 const SizedBox(height: 16),
                 WFTextField(
                   controller: _confirmPasswordController,
-                  label: 'Confirmar contraseÃ±a *',
-                  hint: 'Repite la contraseÃ±a',
+                  label: 'Confirmar contraseña *',
+                  hint: 'Repite la contraseña',
                   obscureText: _obscureConfirmPassword,
                   suffixIcon: IconButton(
                     icon: Icon(_obscureConfirmPassword ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                    onPressed: () =>
+                        setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                   ),
                   validator: (value) {
-                    if (value == null || value.isEmpty) return 'Confirme la contraseÃ±a';
-                    if (value != _passwordController.text) return 'Las contraseÃ±as no coinciden';
+                    if (value == null || value.isEmpty) return 'Confirme la contraseña';
+                    if (value != _passwordController.text) return 'Las contraseñas no coinciden';
                     return null;
                   },
                 ),
@@ -182,8 +174,9 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
                 WFTextField(
                   controller: _businessNameController,
                   label: 'Nombre del negocio *',
-                  hint: 'Ej: Restaurante El SazÃ³n',
-                  validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+                  hint: 'Ej: Restaurante El Sazón',
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Requerido' : null,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
@@ -193,7 +186,7 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
                     border: OutlineInputBorder(),
                   ),
                   items: const [
-                    DropdownMenuItem(value: 'gastronomia', child: Text('GastronomÃ­a')),
+                    DropdownMenuItem(value: 'gastronomia', child: Text('Gastronomía')),
                     DropdownMenuItem(value: 'comercio', child: Text('Comercio')),
                     DropdownMenuItem(value: 'otro', child: Text('Otro')),
                   ],
@@ -220,16 +213,17 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
                 const SizedBox(height: 16),
                 WFTextField(
                   controller: _repDocumentNumberController,
-                  label: 'NÃºmero de documento *',
+                  label: 'Número de documento *',
                   hint: 'Ej: 12345678900',
-                  validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Requerido' : null,
                 ),
                 const SizedBox(height: 16),
                 GestureDetector(
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
-                      initialDate: DateTime(1980, 1, 1),
+                      initialDate: DateTime(1990, 1, 1),
                       firstDate: DateTime(1950),
                       lastDate: DateTime.now(),
                       locale: const Locale('es', 'ES'),
@@ -245,11 +239,13 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
                         border: OutlineInputBorder(),
                       ),
                       controller: TextEditingController(
-                        text: _repBirthDate != null ? DateFormat('dd/MM/yyyy').format(_repBirthDate!) : '',
+                        text: _repBirthDate != null
+                            ? DateFormat('dd/MM/yyyy').format(_repBirthDate!)
+                            : '',
                       ),
                       validator: (value) {
                         if (_repBirthDate == null) return 'Seleccione la fecha';
-                        if (!_isRepAgeValid) return 'Debe ser mayor de 18 aÃ±os';
+                        if (!_isRepAgeValid) return 'Debe ser mayor de 18 años';
                         return null;
                       },
                     ),
@@ -258,25 +254,25 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
                 const SizedBox(height: 16),
                 WFTextField(
                   controller: _repPhoneController,
-                  label: 'TelÃ©fono (WhatsApp) *',
+                  label: 'Teléfono (WhatsApp) *',
                   hint: 'Ej: 11999999999',
                   keyboardType: TextInputType.phone,
-                  validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Requerido' : null,
                 ),
                 const SizedBox(height: 24),
-                Text('DirecciÃ³n del negocio', style: AppTextStyles.headlineMedium),
+                Text('Dirección del negocio', style: AppTextStyles.headlineMedium),
                 const SizedBox(height: 8),
                 WFAddressIBGE(
-                  onAddressChanged: (addressMap) => _address = addressMap,
+                  onAddressChanged: (addressMap) =>
+                      setState(() => _address = addressMap),
                 ),
                 const SizedBox(height: 32),
                 if (_isLoading)
                   const Center(child: CircularProgressIndicator())
                 else
-                  WFButton(
-                    label: 'Registrarse',
-                    onPressed: _register,
-                  ),
+                  WFButton(label: 'Registrarse', onPressed: _register),
+                const SizedBox(height: 24),
               ],
             ),
           ),

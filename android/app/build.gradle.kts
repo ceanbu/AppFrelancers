@@ -1,4 +1,4 @@
-﻿plugins {
+plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
@@ -6,7 +6,7 @@
 
 android {
     ndkVersion = "27.0.12077973"
-    compileSdk = 34
+    compileSdk = 35
     namespace = "com.workflex.workflex"
 
     compileOptions {

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+锘縤mport 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -27,15 +27,15 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
   List<String> _requiredSkills = [];
   final _descriptionController = TextEditingController();
   bool _isSaving = false;
+  bool _scheduleInitialized = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final extra = GoRouterState.of(context).extra;
-    if (extra != null && extra is Map<String, List<TimeRange>>) {
-      _schedule = extra;
-    } else {
-      _schedule = {};
+    if (!_scheduleInitialized) {
+      final extra = GoRouterState.of(context).extra;
+      _schedule = (extra is Map<String, List<TimeRange>>) ? extra : {};
+      _scheduleInitialized = true;
     }
   }
 
@@ -55,27 +55,31 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
       );
       return;
     }
-    if (_workAddress['state'] == null || _workAddress['state']!.isEmpty ||
-        _workAddress['municipality'] == null || _workAddress['municipality']!.isEmpty ||
-        _workAddress['number'] == null || _workAddress['number']!.isEmpty) {
+    if ((_workAddress['state'] ?? '').isEmpty ||
+        (_workAddress['municipality'] ?? '').isEmpty ||
+        (_workAddress['number'] ?? '').isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Completa la direcci髇 del trabajo')),
+        const SnackBar(content: Text('Completa la direcci贸n del trabajo')),
       );
       return;
     }
-
     setState(() => _isSaving = true);
     try {
       final uid = FirebaseAuth.instance.currentUser!.uid;
       final vacancyData = {
         'employerId': uid,
         'jobTitle': _jobTitleController.text.trim(),
-        'description': _descriptionController.text.trim().isEmpty ? null : _descriptionController.text.trim(),
-        'remuneration': _remunerationController.text.trim().isEmpty ? 'A convenir' : _remunerationController.text.trim(),
+        'description': _descriptionController.text.trim().isEmpty
+            ? null
+            : _descriptionController.text.trim(),
+        'remuneration': _remunerationController.text.trim().isEmpty
+            ? 'A convenir'
+            : _remunerationController.text.trim(),
         'remunerationUnit': _remunerationUnit,
         'workAddress': _workAddress,
         'requiredSkills': _requiredSkills,
-        'schedule': _schedule.map((key, value) => MapEntry(key, value.map((r) => r.toJson()).toList())),
+        'schedule': _schedule.map((key, value) =>
+            MapEntry(key, value.map((r) => r.toJson()).toList())),
         'status': 'open',
         'applicantCount': 0,
         'matchedFreelancerId': null,
@@ -83,9 +87,7 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
         'updatedAt': FieldValue.serverTimestamp(),
       };
       await FirebaseFirestore.instance.collection('vacancies').add(vacancyData);
-      if (mounted) {
-        context.pop(); // regresa al dashboard directamente
-      }
+      if (mounted) context.go('/employer/home');
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al publicar: $e')),
@@ -119,7 +121,8 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
                 controller: _jobTitleController,
                 label: 'Nombre del puesto *',
                 hint: 'Ej: Cocinero',
-                validator: (value) => value == null || value.isEmpty ? 'Requerido' : null,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Requerido' : null,
               ),
               const SizedBox(height: 16),
               Row(
@@ -127,7 +130,7 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
                   Expanded(
                     child: WFTextField(
                       controller: _remunerationController,
-                      label: 'Remuneraci髇 (opcional)',
+                      label: 'Remuneraci贸n (opcional)',
                       hint: 'Ej: 1500',
                       keyboardType: TextInputType.number,
                     ),
@@ -142,42 +145,49 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
                       ),
                       items: const [
                         DropdownMenuItem(value: 'hora', child: Text('por hora')),
-                        DropdownMenuItem(value: 'd韆', child: Text('por d韆')),
+                        DropdownMenuItem(value: 'd铆a', child: Text('por d铆a')),
                         DropdownMenuItem(value: 'turno', child: Text('por turno')),
                       ],
-                      onChanged: (value) => setState(() => _remunerationUnit = value),
+                      onChanged: (value) =>
+                          setState(() => _remunerationUnit = value),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              const Text('Direcci髇 del trabajo', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Direcci贸n del trabajo',
+                  style: AppTextStyles.titleMedium
+                      .copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
               WFAddressIBGE(
-                onAddressChanged: (address) => _workAddress = address,
+                onAddressChanged: (address) =>
+                    setState(() => _workAddress = address),
               ),
               const SizedBox(height: 16),
-              const Text('Habilidades requeridas (m醲. 6)', style: TextStyle(fontWeight: FontWeight.bold)),
+              Text('Habilidades requeridas (m谩x. 6)',
+                  style: AppTextStyles.titleMedium
+                      .copyWith(fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
-              WFSkillsSelector(
-                title: 'Selecciona habilidades',
-                onSaved: (skills) => _requiredSkills = skills,
+              SizedBox(
+                height: 420,
+                child: WFSkillsSelector(
+                  title: 'Selecciona habilidades',
+                  onSaved: (skills) => setState(() => _requiredSkills = skills),
+                ),
               ),
               const SizedBox(height: 16),
               WFTextField(
                 controller: _descriptionController,
-                label: 'Descripci髇 (opcional)',
+                label: 'Descripci贸n (opcional)',
                 hint: 'Detalles adicionales...',
-                maxLines: 5,
+                maxLines: 4,
               ),
               const SizedBox(height: 32),
               if (_isSaving)
                 const Center(child: CircularProgressIndicator())
               else
-                WFButton(
-                  label: 'Publicar vacante',
-                  onPressed: _saveVacancy,
-                ),
+                WFButton(label: 'Publicar vacante', onPressed: _saveVacancy),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -185,4 +195,3 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
     );
   }
 }
-

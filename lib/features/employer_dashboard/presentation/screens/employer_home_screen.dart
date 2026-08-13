@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+ï»¿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -89,11 +89,14 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('No has publicado vacantes aún.'),
+                const Text('No has publicado vacantes aÃºn.'),
                 const SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => context.go('/employer/vacancy/create/step1'),
-                  child: const Text('Crear primera vacante'),
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    child: Text('Crear primera vacante'),
+                  ),
                 ),
               ],
             ),
@@ -127,7 +130,7 @@ class _EmployerHomeScreenState extends State<EmployerHomeScreen> {
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ListTile(
-                title: Text(data['jobTitle'] ?? 'Sin título'),
+                title: Text(data['jobTitle'] ?? 'Sin tÃ­tulo'),
                 subtitle: Text('Postulantes: ${data['applicantCount'] ?? 0}'),
                 trailing: Chip(
                   label: Text(statusText),
