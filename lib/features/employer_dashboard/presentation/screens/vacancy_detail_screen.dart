@@ -47,7 +47,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
       final snapshot = await FirebaseFirestore.instance
           .collection('applications')
           .where('vacantId', isEqualTo: widget.vacancyId)
-          .where('status', isEqualTo: 'pending')
+          .where('status', whereIn: ['pending', 'contacted'])
           .get();
       debugPrint('📋 Aplicaciones encontradas: ${snapshot.docs.length}');
       final List<Map<String, dynamic>> applicantsList = [];
@@ -253,8 +253,8 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
                   Wrap(
                     spacing: 8,
                     children: (data['requiredSkills'] as List? ?? []).map<Widget>((skill) => Chip(
-                      label: Text(skill),
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
+                      label: Text(skill.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                      backgroundColor: AppColors.primary,
                     )).toList(),
                   ),
                   const SizedBox(height: 16),

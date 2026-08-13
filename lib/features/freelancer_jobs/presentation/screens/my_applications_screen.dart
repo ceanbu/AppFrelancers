@@ -105,7 +105,11 @@ class _ApplicationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vacancyId = applicationData['vacancyId'] as String? ?? '';
+    // Soportar ambos campos por compatibilidad con datos viejos
+    final vacancyId = (applicationData['vacantId'] ?? applicationData['vacancyId'] ?? '') as String;
+    if (vacancyId.isEmpty) {
+      return const SizedBox.shrink();
+    }
     return FutureBuilder<DocumentSnapshot>(
       future: FirebaseFirestore.instance.collection('vacancies').doc(vacancyId).get(),
       builder: (context, snapshot) {
@@ -117,9 +121,7 @@ class _ApplicationCard extends StatelessWidget {
             ),
           );
         }
-        if (!snapshot.data!.exists) {
-          return const SizedBox.shrink();
-        }
+        if (!snapshot.data!.exists) return const SizedBox.shrink();
         final vacancy = snapshot.data!.data() as Map<String, dynamic>;
         final appliedAt = applicationData['appliedAt'];
         String dateStr = '';
@@ -135,17 +137,17 @@ class _ApplicationCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(vacancy['jobTitle'] ?? 'Sin título',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
                 if ((vacancy['remuneration'] ?? '').toString().isNotEmpty)
-                  Text('Remuneración: ${vacancy['remuneration']} ${vacancy['remunerationUnit'] ?? ''}',
-                      style: const TextStyle(color: AppColors.textSecondary)),
+                  Text(
+                    'Remuneración: ${vacancy['remuneration']} ${vacancy['remunerationUnit'] ?? ''}',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
                 const SizedBox(height: 4),
                 if (dateStr.isNotEmpty)
                   Text('Postulado el $dateStr',
-                      style: const TextStyle(
-                          color: AppColors.textSecondary, fontSize: 12)),
+                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
               ],
             ),
           ),
