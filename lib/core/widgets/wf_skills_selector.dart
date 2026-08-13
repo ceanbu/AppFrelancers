@@ -44,6 +44,17 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
     super.dispose();
   }
 
+  void _toggle(String name) {
+    setState(() {
+      if (_selected.contains(name)) {
+        _selected.remove(name);
+      } else if (_selected.length < 6) {
+        _selected.add(name);
+      }
+    });
+    widget.onSaved(List.from(_selected));
+  }
+
   @override
   Widget build(BuildContext context) {
     final skillsAsync = ref.watch(skillsListProvider);
@@ -51,7 +62,8 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(widget.title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(widget.title,
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -60,7 +72,10 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
                 style: const TextStyle(fontWeight: FontWeight.w500)),
             if (_selected.isNotEmpty)
               TextButton(
-                onPressed: () => setState(() => _selected.clear()),
+                onPressed: () {
+                  setState(() => _selected.clear());
+                  widget.onSaved([]);
+                },
                 child: const Text('Limpiar todo'),
               ),
           ],
@@ -72,10 +87,11 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
             runSpacing: 8,
             children: _selected.map((skill) => Chip(
               label: Text(skill,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w500)),
               backgroundColor: AppColors.primary,
               deleteIconColor: Colors.white,
-              onDeleted: () => setState(() => _selected.remove(skill)),
+              onDeleted: () => _toggle(skill),
             )).toList(),
           ),
         ],
@@ -93,51 +109,28 @@ class _WFSkillsSelectorState extends ConsumerState<WFSkillsSelector> {
           child: skillsAsync.when(
             data: (skills) {
               final filtered = skills
-                  .where((skill) =>
-                      skill['name'].toString().toLowerCase().contains(_searchQuery))
+                  .where((s) => s['name'].toString().toLowerCase().contains(_searchQuery))
                   .toList();
               return ListView.builder(
                 itemCount: filtered.length,
                 itemBuilder: (context, index) {
-                  final skill = filtered[index];
-                  final name = skill['name'] as String;
+                  final name = filtered[index]['name'] as String;
                   final isSelected = _selected.contains(name);
                   final atLimit = _selected.length >= 6 && !isSelected;
                   return CheckboxListTile(
                     title: Text(name,
-                        style: TextStyle(
-                            color: atLimit ? Colors.grey : null)),
+                        style: TextStyle(color: atLimit ? Colors.grey : null)),
                     value: isSelected,
                     activeColor: AppColors.primary,
-                    onChanged: atLimit
-                        ? null
-                        : (value) {
-                            setState(() {
-                              if (value == true) {
-                                _selected.add(name);
-                              } else {
-                                _selected.remove(name);
-                              }
-                            });
-                          },
+                    onChanged: atLimit ? null : (_) => _toggle(name),
                   );
                 },
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) =>
+            error: (err, _) =>
                 Center(child: Text('Error al cargar habilidades: $err')),
           ),
-        ),
-        const SizedBox(height: 16),
-        ElevatedButton(
-          onPressed: () => widget.onSaved(_selected),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primary,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(double.infinity, 48),
-          ),
-          child: const Text('Guardar habilidades'),
         ),
       ],
     );

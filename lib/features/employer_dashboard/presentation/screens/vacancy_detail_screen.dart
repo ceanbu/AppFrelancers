@@ -290,7 +290,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
                         ),
                       ),
                     ),
-                  _buildApplicantsSection(),
+                  if (_status != 'filled' && _status != 'closed') _buildApplicantsSection(),
                 ],
               ),
             );

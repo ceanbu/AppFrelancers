@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -69,7 +69,7 @@ class _ApplicantsListScreenState extends State<ApplicantsListScreen> {
         'status': 'filled',
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Match realizado con �xito')),
+        const SnackBar(content: Text('Match realizado con éxito')),
       );
       final whatsappUrl = 'https://wa.me/${phone.replaceAll(RegExp(r'[^\d+]'), '')}?text=Hola!%20Has%20sido%20seleccionado%20para%20la%20vacante.';
       if (await canLaunchUrl(Uri.parse(whatsappUrl))) {

@@ -49,12 +49,7 @@ class _CreateVacancyStep2ScreenState extends State<CreateVacancyStep2Screen> {
 
   Future<void> _saveVacancy() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_requiredSkills.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona al menos una habilidad requerida')),
-      );
-      return;
-    }
+    
     if ((_workAddress['state'] ?? '').isEmpty ||
         (_workAddress['municipality'] ?? '').isEmpty ||
         (_workAddress['number'] ?? '').isEmpty) {
