@@ -108,7 +108,7 @@ class _EmployerRegisterScreenState extends State<EmployerRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false,
+      canPop: true,
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(

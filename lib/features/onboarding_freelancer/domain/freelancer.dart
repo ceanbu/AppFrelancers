@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:workflex/core/models/time_range.dart';
 
 class Freelancer {
   final String id;
@@ -14,7 +14,6 @@ class Freelancer {
   final List<Experience> experience;
   final Map<String, List<TimeRange>> availability;
   final DateTime createdAt;
-
   Freelancer({
     required this.id,
     required this.fullName,
@@ -30,7 +29,6 @@ class Freelancer {
     this.availability = const {},
     required this.createdAt,
   });
-
   Map<String, dynamic> toJson() {
     return {
       'fullName': fullName,
@@ -47,7 +45,6 @@ class Freelancer {
       'createdAt': createdAt.toIso8601String(),
     };
   }
-
   factory Freelancer.fromJson(String id, Map<String, dynamic> json) {
     return Freelancer(
       id: id,
@@ -74,7 +71,6 @@ class Experience {
   final DateTime? endDate;
   final String? description;
   final bool isCurrent;
-
   Experience({
     required this.company,
     required this.role,
@@ -83,7 +79,6 @@ class Experience {
     this.description,
     this.isCurrent = false,
   });
-
   Map<String, dynamic> toJson() => {
     'company': company,
     'role': role,
@@ -92,7 +87,6 @@ class Experience {
     'description': description,
     'isCurrent': isCurrent,
   };
-
   factory Experience.fromJson(Map<String, dynamic> json) => Experience(
     company: json['company'],
     role: json['role'],
@@ -100,28 +94,5 @@ class Experience {
     endDate: json['endDate'] != null ? DateTime.parse(json['endDate']) : null,
     description: json['description'],
     isCurrent: json['isCurrent'],
-  );
-}
-
-class TimeRange {
-  final TimeOfDay start;
-  final TimeOfDay end;
-
-  TimeRange({required this.start, required this.end});
-
-  Map<String, String> toJson() => {
-    'start': ':',
-    'end': ':',
-  };
-
-  factory TimeRange.fromJson(Map<String, dynamic> json) => TimeRange(
-    start: TimeOfDay(
-      hour: int.parse(json['start'].split(':')[0]),
-      minute: int.parse(json['start'].split(':')[1]),
-    ),
-    end: TimeOfDay(
-      hour: int.parse(json['end'].split(':')[0]),
-      minute: int.parse(json['end'].split(':')[1]),
-    ),
   );
 }

@@ -19,64 +19,42 @@ class RoleSelectionScreen extends StatelessWidget {
               const Spacer(flex: 1),
               Text(
                 'WorkFlex',
-                style: AppTextStyles.displayMedium.copyWith(
-                  color: AppColors.primary,
-                ),
+                style: AppTextStyles.displayMedium.copyWith(color: AppColors.primary),
               ),
               const SizedBox(height: 16),
               Text(
                 'Conectamos talento freelance con oportunidades laborales',
                 textAlign: TextAlign.center,
-                style: AppTextStyles.bodyLarge.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+                style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
               ),
               const Spacer(flex: 2),
-              // Botón Freelancer
               ElevatedButton(
-                onPressed: () => context.go('/freelancer/register/step1'),
+                onPressed: () => context.push('/freelancer/register/step1'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: Text(
-                  'Soy Freelancer',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    color: Colors.white,
-                  ),
-                ),
+                child: Text('Soy Freelancer', style: AppTextStyles.labelLarge.copyWith(color: Colors.white)),
               ),
               const SizedBox(height: 16),
-              // Botón Empleador (outline)
               OutlinedButton(
-                onPressed: () => context.go('/employer/register'),
+                onPressed: () => context.push('/employer/register'),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primary,
                   side: BorderSide(color: AppColors.primary),
                   minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                 ),
-                child: Text(
-                  'Soy Empleador',
-                  style: AppTextStyles.labelLarge.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
+                child: Text('Soy Empleador', style: AppTextStyles.labelLarge.copyWith(color: AppColors.primary)),
               ),
               const SizedBox(height: 32),
               TextButton(
-                onPressed: () => context.go('/login'),
+                onPressed: () => context.push('/login'),
                 child: Text(
-                  '¿Ya tienes cuenta? Inicia sesión',
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.primary,
-                  ),
+                  'Ya tienes cuenta? Inicia sesion',
+                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
                 ),
               ),
               const Spacer(flex: 1),

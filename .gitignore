@@ -46,3 +46,7 @@ app.*.map.json
 
 # Firebase Admin SDK credentials
 firebase_seed/skills/*.json
+
+# Firebase Admin SDK - claves de servicio (nunca subir)
+serviceAccountKey.json
+**/*firebase-adminsdk*.json

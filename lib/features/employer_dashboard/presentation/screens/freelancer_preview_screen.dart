@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
 import 'package:workflex/core/models/time_range.dart';
+import 'package:go_router/go_router.dart';
 
 class FreelancerPreviewScreen extends StatefulWidget {
   final String freelancerId;
@@ -50,7 +51,7 @@ class _FreelancerPreviewScreenState extends State<FreelancerPreviewScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
       ),
       body: FutureBuilder<DocumentSnapshot>(

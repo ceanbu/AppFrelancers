@@ -4,9 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
-import 'package:workflex/features/profile/presentation/screens/freelancer_profile_screen.dart';
-import 'job_detail_screen.dart';
-import 'my_applications_screen.dart';
 
 class JobsFeedScreen extends StatefulWidget {
   const JobsFeedScreen({super.key});
@@ -16,33 +13,57 @@ class JobsFeedScreen extends StatefulWidget {
 }
 
 class _JobsFeedScreenState extends State<JobsFeedScreen> {
-  int _selectedIndex = 0;
-  late Future<List<String>> _freelancerSkills;
-  late Stream<QuerySnapshot> _vacanciesStream;
+  late Future<_FreelancerMatchProfile> _profileFuture;
 
   @override
   void initState() {
     super.initState();
-    _loadFreelancerSkills();
+    _profileFuture = _loadFreelancerProfile();
   }
 
-  void _loadFreelancerSkills() {
+  Future<_FreelancerMatchProfile> _loadFreelancerProfile() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      _freelancerSkills = Future.value([]);
-      _vacanciesStream = Stream.empty();
-      return;
+      return _FreelancerMatchProfile(skills: [], state: '', municipality: '', availability: {});
     }
-    _freelancerSkills = FirebaseFirestore.instance
-        .collection('freelancers')
-        .doc(uid)
-        .get()
-        .then((doc) => List<String>.from(doc.data()?['skills'] ?? []));
+    final doc = await FirebaseFirestore.instance.collection('freelancers').doc(uid).get();
+    final data = doc.data() ?? {};
+    final address = (data['address'] as Map<String, dynamic>?) ?? {};
+    return _FreelancerMatchProfile(
+      skills: List<String>.from(data['skills'] ?? []),
+      state: (address['state'] ?? '').toString(),
+      municipality: (address['municipality'] ?? '').toString(),
+      availability: (data['availability'] as Map<String, dynamic>?) ?? {},
+    );
+  }
 
-    _vacanciesStream = FirebaseFirestore.instance
-        .collection('vacancies')
-        .where('status', isEqualTo: 'open')
-        .snapshots();
+  int _timeToMinutes(dynamic hhmm) {
+    if (hhmm == null) return -1;
+    final parts = hhmm.toString().split(':');
+    if (parts.length != 2) return -1;
+    final h = int.tryParse(parts[0]) ?? 0;
+    final m = int.tryParse(parts[1]) ?? 0;
+    return h * 60 + m;
+  }
+
+  bool _hasScheduleOverlap(Map<String, dynamic> vacancySchedule, Map<String, dynamic> freelancerAvailability) {
+    for (final day in vacancySchedule.keys) {
+      if (!freelancerAvailability.containsKey(day)) continue;
+      final vacancyRanges = (vacancySchedule[day] as List?) ?? [];
+      final freelancerRanges = (freelancerAvailability[day] as List?) ?? [];
+      for (final vr in vacancyRanges) {
+        final vStart = _timeToMinutes(vr['startTime'] ?? vr['start']);
+        final vEnd = _timeToMinutes(vr['endTime'] ?? vr['end']);
+        if (vStart < 0 || vEnd < 0) continue;
+        for (final fr in freelancerRanges) {
+          final fStart = _timeToMinutes(fr['startTime'] ?? fr['start']);
+          final fEnd = _timeToMinutes(fr['endTime'] ?? fr['end']);
+          if (fStart < 0 || fEnd < 0) continue;
+          if (vStart < fEnd && fStart < vEnd) return true;
+        }
+      }
+    }
+    return false;
   }
 
   @override
@@ -54,73 +75,105 @@ class _JobsFeedScreenState extends State<JobsFeedScreen> {
         backgroundColor: AppColors.surface,
         elevation: 0,
       ),
-      body: _selectedIndex == 0
-          ? FutureBuilder<List<String>>(
-              future: _freelancerSkills,
-              builder: (context, skillsSnapshot) {
-                if (skillsSnapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                final freelancerSkills = skillsSnapshot.data ?? [];
-                return StreamBuilder<QuerySnapshot>(
-                  stream: _vacanciesStream,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: '));
-                    }
-                    final docs = snapshot.data?.docs ?? [];
-                    final filteredDocs = docs.where((doc) {
-                      final requiredSkills = List<String>.from(doc['requiredSkills'] ?? []);
-                      return requiredSkills.any((skill) => freelancerSkills.contains(skill));
-                    }).toList();
+      body: FutureBuilder<_FreelancerMatchProfile>(
+        future: _profileFuture,
+        builder: (context, profileSnapshot) {
+          if (profileSnapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          final profile = profileSnapshot.data ??
+              _FreelancerMatchProfile(skills: [], state: '', municipality: '', availability: {});
 
-                    if (filteredDocs.isEmpty) {
-                      return const Center(child: Text('No hay vacantes que coincidan con tus habilidades.'));
-                    }
-                    return ListView.builder(
-                      itemCount: filteredDocs.length,
-                      itemBuilder: (context, index) {
-                        final doc = filteredDocs[index];
-                        final data = doc.data() as Map<String, dynamic>;
-                        return Card(
-                          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          child: ListTile(
-                            title: Text(data['jobTitle'] ?? ''),
-                            subtitle: Text(', '),
-                            trailing: const Icon(Icons.chevron_right),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => JobDetailScreen(jobId: doc.id),
-                                ),
-                              );
-                            },
-                          ),
-                        );
-                      },
-                    );
-                  },
+          if (profile.state.isEmpty || profile.municipality.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'Completa tu direccion en tu perfil para ver vacantes cerca tuyo.',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodyMedium,
+                ),
+              ),
+            );
+          }
+
+          final vacanciesStream = FirebaseFirestore.instance
+              .collection('vacancies')
+              .where('status', isEqualTo: 'open')
+              .where('workAddress.state', isEqualTo: profile.state)
+              .where('workAddress.municipality', isEqualTo: profile.municipality)
+              .snapshots();
+
+          return StreamBuilder<QuerySnapshot>(
+            stream: vacanciesStream,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+              final docs = snapshot.data?.docs ?? [];
+
+              final filteredDocs = docs.where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                final requiredSkills = List<String>.from(data['requiredSkills'] ?? []);
+                final hasSkillMatch = requiredSkills.any((s) => profile.skills.contains(s));
+                if (!hasSkillMatch) return false;
+
+                final vacancySchedule = (data['schedule'] as Map<String, dynamic>?) ?? {};
+                return _hasScheduleOverlap(vacancySchedule, profile.availability);
+              }).toList();
+
+              if (filteredDocs.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text(
+                      'No hay vacantes cerca tuyo que coincidan con tus habilidades y disponibilidad.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 );
-              },
-            )
-          : (_selectedIndex == 1
-              ? const MyApplicationsScreen()
-              : const FreelancerProfileScreen()),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.work), label: 'Jobs'),
-          BottomNavigationBarItem(icon: Icon(Icons.list_alt), label: 'Aplicaciones'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Perfil'),
-        ],
-        selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textSecondary,
+              }
+              return ListView.builder(
+                itemCount: filteredDocs.length,
+                itemBuilder: (context, index) {
+                  final doc = filteredDocs[index];
+                  final data = doc.data() as Map<String, dynamic>;
+                  final remuneration = (data['remuneration'] ?? '').toString();
+                  return Card(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: ListTile(
+                      title: Text(data['jobTitle'] ?? ''),
+                      subtitle: Text(
+                        remuneration.isNotEmpty
+                            ? '$remuneration ${data['remunerationUnit'] ?? ''}'
+                            : 'A convenir',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/freelancer/jobs/${doc.id}'),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
+}
+
+class _FreelancerMatchProfile {
+  final List<String> skills;
+  final String state;
+  final String municipality;
+  final Map<String, dynamic> availability;
+  _FreelancerMatchProfile({
+    required this.skills,
+    required this.state,
+    required this.municipality,
+    required this.availability,
+  });
 }

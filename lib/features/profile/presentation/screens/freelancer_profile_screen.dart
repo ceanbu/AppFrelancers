@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +7,10 @@ import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
 import 'package:workflex/core/models/time_range.dart';
 import 'edit_availability_screen.dart';
+import 'edit_personal_info_screen.dart';
+import 'edit_address_screen.dart';
+import 'edit_skills_screen.dart';
+import 'edit_experience_screen.dart';
 
 class FreelancerProfileScreen extends StatefulWidget {
   const FreelancerProfileScreen({super.key});
@@ -61,6 +65,55 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
     if (changed == true) setState(() => _loadUserData());
   }
 
+  Future<void> _editPersonalInfo(Map<String, dynamic> data) async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditPersonalInfoScreen(
+          currentPhone: (data['phone'] ?? '').toString(),
+          currentAboutMe: (data['aboutMe'] ?? '').toString(),
+        ),
+      ),
+    );
+    if (changed == true) setState(() => _loadUserData());
+  }
+
+  Future<void> _editAddress(Map<String, dynamic> address) async {
+    final currentAddress = address.map((key, value) => MapEntry(key, (value ?? '').toString()));
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditAddressScreen(currentAddress: currentAddress),
+      ),
+    );
+    if (changed == true) setState(() => _loadUserData());
+  }
+
+  Future<void> _editSkills(List<dynamic> skills) async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditSkillsScreen(
+          currentSkills: skills.map((s) => s.toString()).toList(),
+        ),
+      ),
+    );
+    if (changed == true) setState(() => _loadUserData());
+  }
+
+  Future<void> _editExperience(List<dynamic> experience) async {
+    final currentExperience = experience
+        .map((e) => Map<String, dynamic>.from(e as Map))
+        .toList();
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditExperienceScreen(currentExperience: currentExperience),
+      ),
+    );
+    if (changed == true) setState(() => _loadUserData());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -91,13 +144,21 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
 
           final data = snapshot.data!.data() as Map<String, dynamic>;
           final address = (data['address'] as Map<String, dynamic>?) ?? {};
+          final skills = (data['skills'] as List?) ?? [];
+          final experience = (data['experience'] as List?) ?? [];
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionTitle('Información personal'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSectionTitle('Información personal'),
+                    _buildEditButton(() => _editPersonalInfo(data)),
+                  ],
+                ),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -122,7 +183,13 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _buildSectionTitle('Dirección'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSectionTitle('Dirección'),
+                    _buildEditButton(() => _editAddress(address)),
+                  ],
+                ),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
@@ -145,17 +212,23 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                _buildSectionTitle('Habilidades'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSectionTitle('Habilidades'),
+                    _buildEditButton(() => _editSkills(skills)),
+                  ],
+                ),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: (data['skills'] as List? ?? []).isEmpty
+                    child: skills.isEmpty
                         ? Text('Sin habilidades registradas.',
                             style: AppTextStyles.bodyMedium)
                         : Wrap(
                             spacing: 8,
                             runSpacing: 8,
-                            children: (data['skills'] as List).map<Widget>((skill) => Chip(
+                            children: skills.map<Widget>((skill) => Chip(
                               label: Text(skill.toString(),
                                   style: const TextStyle(
                                       color: Colors.white, fontWeight: FontWeight.w500)),
@@ -180,14 +253,20 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
                 ),
                 _buildAvailabilityCard(data['availability']),
                 const SizedBox(height: 24),
-                _buildSectionTitle('Experiencia laboral'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildSectionTitle('Experiencia laboral'),
+                    _buildEditButton(() => _editExperience(experience)),
+                  ],
+                ),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(16),
-                    child: (data['experience'] as List? ?? []).isEmpty
+                    child: experience.isEmpty
                         ? Text('Sin experiencia registrada.', style: AppTextStyles.bodyMedium)
                         : Column(
-                            children: (data['experience'] as List).map<Widget>((exp) {
+                            children: experience.map<Widget>((exp) {
                               try {
                                 final start = exp['startDate'] ?? '';
                                 final end = (exp['isCurrent'] == true)
@@ -287,6 +366,13 @@ class _FreelancerProfileScreenState extends State<FreelancerProfileScreen> {
   Widget _buildSectionTitle(String title) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Text(title, style: AppTextStyles.headlineMedium),
+      );
+
+  Widget _buildEditButton(VoidCallback onPressed) => TextButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.edit, size: 18),
+        label: const Text('Editar'),
+        style: TextButton.styleFrom(foregroundColor: AppColors.primary),
       );
 
   Widget _buildInfoRow(String label, String value) => Row(

@@ -64,6 +64,10 @@ class _Step2AvailabilityScreenState extends State<Step2AvailabilityScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        // Retroceso bloqueado intencionalmente durante el onboarding
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Paso 2 - Disponibilidad'),

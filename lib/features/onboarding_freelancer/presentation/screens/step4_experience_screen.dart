@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -19,6 +19,10 @@ class _Step4ExperienceScreenState extends State<Step4ExperienceScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        // Retroceso bloqueado intencionalmente durante el onboarding
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Paso 4 - Experiencia Laboral'),

@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
 
@@ -29,10 +30,10 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     if (uid == null) return;
     final existing = await FirebaseFirestore.instance
         .collection('applications')
-        .where('vacantId', isEqualTo: widget.jobId)
+        .where('vacancyId', isEqualTo: widget.jobId)
         .where('freelancerId', isEqualTo: uid)
         .get();
-    if (existing.docs.isNotEmpty) setState(() => _alreadyApplied = true);
+    if (existing.docs.isNotEmpty && mounted) setState(() => _alreadyApplied = true);
   }
 
   Future<void> _apply() async {
@@ -49,7 +50,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       final vacancyData = vacancyDoc.data() as Map<String, dynamic>;
       final employerId = vacancyData['employerId'];
       await FirebaseFirestore.instance.collection('applications').add({
-        'vacantId': widget.jobId,
+        'vacancyId': widget.jobId,
         'freelancerId': uid,
         'employerId': employerId,
         'status': 'pending',
@@ -64,14 +65,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Postulación enviada con éxito!')));
+          const SnackBar(content: Text('Postulacion enviada con exito!')));
         setState(() => _alreadyApplied = true);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al postular: $e')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error al postular: $e')));
+      }
     } finally {
-      setState(() => _isApplying = false);
+      if (mounted) setState(() => _isApplying = false);
     }
   }
 
@@ -85,7 +88,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
       ),
       body: FutureBuilder<DocumentSnapshot>(
@@ -104,7 +107,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           final workAddress = (data['workAddress'] as Map<String, dynamic>?) ?? {};
           final schedule = (data['schedule'] as Map<String, dynamic>?) ?? {};
           final scheduleSummary = schedule.isNotEmpty
-              ? 'Disponible en ${schedule.keys.length} día(s)'
+              ? 'Disponible en ${schedule.keys.length} dia(s)'
               : 'Sin horarios definidos';
           final remuneration = data['remuneration'] ?? '';
           final remunerationUnit = data['remunerationUnit'] ?? '';
@@ -117,10 +120,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 Text(data['jobTitle'] ?? '', style: AppTextStyles.displayMedium),
                 const SizedBox(height: 8),
                 if (remuneration.isNotEmpty)
-                  Text('Remuneración: $remuneration $remunerationUnit',
-                      style: AppTextStyles.titleMedium),
+                  Text('Remuneracion: $remuneration $remunerationUnit', style: AppTextStyles.titleMedium),
                 const SizedBox(height: 16),
-                Text('Dirección', style: AppTextStyles.headlineMedium),
+                Text('Direccion', style: AppTextStyles.headlineMedium),
                 const SizedBox(height: 4),
                 Text(
                   '${workAddress['street'] ?? ''} ${workAddress['number'] ?? ''}, ${workAddress['neighborhood'] ?? ''}\n${workAddress['municipality'] ?? ''} - ${workAddress['state'] ?? ''}',
@@ -137,8 +139,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   spacing: 8,
                   runSpacing: 8,
                   children: (data['requiredSkills'] as List? ?? []).map<Widget>((skill) => Chip(
-                    label: Text(skill.toString(),
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                    label: Text(skill.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
                     backgroundColor: AppColors.primary,
                   )).toList(),
                 ),
@@ -147,7 +148,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Descripción', style: AppTextStyles.headlineMedium),
+                      Text('Descripcion', style: AppTextStyles.headlineMedium),
                       const SizedBox(height: 4),
                       Text(data['description'], style: AppTextStyles.bodyMedium),
                     ],
@@ -155,8 +156,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 const SizedBox(height: 32),
                 Center(
                   child: _alreadyApplied
-                      ? const Text('Ya te postulaste',
-                          style: TextStyle(color: Colors.green, fontSize: 16))
+                      ? const Text('Ya te postulaste', style: TextStyle(color: Colors.green, fontSize: 16))
                       : ElevatedButton(
                           onPressed: _isApplying ? null : _apply,
                           style: ElevatedButton.styleFrom(

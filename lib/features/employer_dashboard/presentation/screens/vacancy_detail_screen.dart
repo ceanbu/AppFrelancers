@@ -1,9 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:workflex/core/models/time_range.dart';
 import 'package:workflex/core/constants/app_colors.dart';
 import 'package:workflex/core/constants/app_text_styles.dart';
 
@@ -16,6 +14,26 @@ class VacancyDetailScreen extends StatefulWidget {
 }
 
 class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
+  String _buildWhatsAppUrl(String rawPhone) {
+    var digits = rawPhone.replaceAll(RegExp(r'[^\d]'), '');
+    if (!digits.startsWith('55') && (digits.length == 10 || digits.length == 11)) {
+      digits = '55' + digits;
+    }
+    return 'https://wa.me/' + digits + '?text=Hola!%20Has%20sido%20seleccionado%20para%20la%20vacante.';
+  }
+
+  Future<void> _openWhatsApp(String phone) async {
+    final url = _buildWhatsAppUrl(phone);
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo abrir WhatsApp. Verifica que este instalado.')),
+        );
+      }
+    }
+  }
   late Future<DocumentSnapshot> _vacancyFuture;
   List<Map<String, dynamic>> _applicants = [];
   String? _matchedFreelancerId;
@@ -46,10 +64,10 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     try {
       final snapshot = await FirebaseFirestore.instance
           .collection('applications')
-          .where('vacantId', isEqualTo: widget.vacancyId)
+          .where('vacancyId', isEqualTo: widget.vacancyId)
           .where('status', whereIn: ['pending', 'contacted'])
           .get();
-      debugPrint('📋 Aplicaciones encontradas: ${snapshot.docs.length}');
+      debugPrint('Aplicaciones encontradas: ${snapshot.docs.length}');
       final List<Map<String, dynamic>> applicantsList = [];
       for (var doc in snapshot.docs) {
         final data = doc.data();
@@ -71,7 +89,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
       }
       setState(() => _applicants = applicantsList);
     } catch (e) {
-      debugPrint('❌ Error cargando postulantes: $e');
+      debugPrint('Error cargando postulantes: $e');
     }
   }
 
@@ -88,22 +106,31 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
         _matchedFreelancerId = freelancerId;
         _status = 'filled';
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Match realizado con éxito')),
+        const SnackBar(content: Text('Match realizado con exito')),
       );
-      final whatsappUrl = 'https://wa.me/${phone.replaceAll(RegExp(r'[^\d+]'), '')}?text=Hola!%20Has%20sido%20seleccionado%20para%20la%20vacante.';
-      if (await canLaunchUrl(Uri.parse(whatsappUrl))) {
-        await launchUrl(Uri.parse(whatsappUrl));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No se pudo abrir WhatsApp')),
-        );
-      }
+      await _openWhatsApp(phone);
       _loadApplicants();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
+    }
+  }
+
+  Future<void> _reactivateIfNoActiveApplicants() async {
+    final remaining = await FirebaseFirestore.instance
+        .collection('applications')
+        .where('vacancyId', isEqualTo: widget.vacancyId)
+        .where('status', whereIn: ['pending', 'contacted'])
+        .get();
+    if (remaining.docs.isEmpty && _status == 'paused') {
+      await FirebaseFirestore.instance.collection('vacancies').doc(widget.vacancyId).update({
+        'status': 'open',
+      });
+      if (mounted) setState(() => _status = 'open');
     }
   }
 
@@ -112,20 +139,11 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Descartar postulante'),
-        content: const Text('¿Qué acción deseas realizar?'),
+        content: const Text('Que accion deseas realizar?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Descartar solo esta vacante'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Bloquear para futuras ofertas'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancelar')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Descartar solo esta vacante')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Bloquear para futuras ofertas')),
         ],
       ),
     );
@@ -133,18 +151,19 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
       await FirebaseFirestore.instance.collection('applications').doc(applicationId).update({
         'status': 'discarded',
       });
+      await _reactivateIfNoActiveApplicants();
       _loadApplicants();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Postulante descartado')),
       );
     }
   }
 
-  Future<void> _editVacancy() async {
-    final doc = await FirebaseFirestore.instance.collection('vacancies').doc(widget.vacancyId).get();
-    if (doc.exists) {
-      context.push('/employer/vacancy/edit', extra: doc.data());
-    }
+  void _editVacancy() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('La edicion de vacantes estara disponible pronto')),
+    );
   }
 
   Map<String, dynamic>? _getMatchedFreelancer() {
@@ -156,146 +175,118 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     return null;
   }
 
-  void _goToHome() {
-    final goRouter = GoRouter.of(context);
-    if (goRouter.canPop()) {
-      goRouter.pop();
-    } else {
-      // No hay pantalla anterior, redirigir al home del empleador
-      // Usamos WidgetsBinding para asegurar que el contexto sigue montado
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          goRouter.go('/employer/home');
-        }
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        _goToHome();
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.background,
-        appBar: AppBar(
-          title: const Text('Detalle de vacante'),
-          backgroundColor: AppColors.surface,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: _goToHome,
-          ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: _editVacancy,
-              tooltip: 'Editar vacante',
-            ),
-          ],
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        title: const Text('Detalle de vacante'),
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
-        body: FutureBuilder<DocumentSnapshot>(
-          future: _vacancyFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting || _isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Center(child: Text('Vacante no encontrada'));
-            }
-            final data = snapshot.data!.data() as Map<String, dynamic>;
-            final workAddress = (data['workAddress'] as Map<String, dynamic>?) ?? {};
-            final schedule = data['schedule'] as Map<String, dynamic>? ?? {};
-            final scheduleSummary = schedule.isNotEmpty
-                ? 'Disponible en ${schedule.keys.length} día(s)'
-                : 'Sin horarios definidos';
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: _editVacancy,
+            tooltip: 'Editar vacante',
+          ),
+        ],
+      ),
+      body: FutureBuilder<DocumentSnapshot>(
+        future: _vacancyFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting || _isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          if (!snapshot.hasData || !snapshot.data!.exists) {
+            return const Center(child: Text('Vacante no encontrada'));
+          }
+          final data = snapshot.data!.data() as Map<String, dynamic>;
+          final workAddress = (data['workAddress'] as Map<String, dynamic>?) ?? {};
+          final schedule = data['schedule'] as Map<String, dynamic>? ?? {};
+          final scheduleSummary = schedule.isNotEmpty
+              ? 'Disponible en ${schedule.keys.length} dia(s)'
+              : 'Sin horarios definidos';
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(data['jobTitle'] ?? '', style: AppTextStyles.displayMedium),
+                    Chip(
+                      label: Text(_statusText(_status ?? 'open')),
+                      backgroundColor: _statusColor(_status ?? 'open').withOpacity(0.2),
+                      labelStyle: TextStyle(color: _statusColor(_status ?? 'open')),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                if (data['remuneration'] != null)
+                  Text('Remuneracion: ${data['remuneration']} ${data['remunerationUnit'] ?? ''}',
+                      style: AppTextStyles.titleMedium),
+                const SizedBox(height: 16),
+                Text('Direccion', style: AppTextStyles.headlineMedium),
+                const SizedBox(height: 4),
+                Text(
+                  '${workAddress['street'] ?? ''} ${workAddress['number'] ?? ''}, ${workAddress['neighborhood'] ?? ''}\n${workAddress['municipality'] ?? ''} - ${workAddress['state'] ?? ''}',
+                  style: AppTextStyles.bodyMedium,
+                ),
+                const SizedBox(height: 16),
+                Text('Horarios', style: AppTextStyles.headlineMedium),
+                const SizedBox(height: 4),
+                Text(scheduleSummary, style: AppTextStyles.bodyMedium),
+                const SizedBox(height: 16),
+                Text('Habilidades requeridas', style: AppTextStyles.headlineMedium),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: (data['requiredSkills'] as List? ?? []).map<Widget>((skill) => Chip(
+                    label: Text(skill.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+                    backgroundColor: AppColors.primary,
+                  )).toList(),
+                ),
+                const SizedBox(height: 16),
+                if (data['description'] != null && data['description'].isNotEmpty)
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(data['jobTitle'] ?? '', style: AppTextStyles.displayMedium),
-                      Chip(
-                        label: Text(_statusText(_status ?? 'open')),
-                        backgroundColor: _statusColor(_status ?? 'open').withOpacity(0.2),
-                        labelStyle: TextStyle(color: _statusColor(_status ?? 'open')),
-                      ),
+                      Text('Descripcion', style: AppTextStyles.headlineMedium),
+                      const SizedBox(height: 4),
+                      Text(data['description'], style: AppTextStyles.bodyMedium),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  if (data['remuneration'] != null)
-                    Text('Remuneración: ${data['remuneration']} ${data['remunerationUnit'] ?? ''}',
-                        style: AppTextStyles.titleMedium),
-                  const SizedBox(height: 16),
-                  Text('Dirección', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${workAddress['street'] ?? ''} ${workAddress['number'] ?? ''}, ${workAddress['neighborhood'] ?? ''}\n${workAddress['municipality'] ?? ''} - ${workAddress['state'] ?? ''}',
-                    style: AppTextStyles.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  Text('Horarios', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 4),
-                  Text(scheduleSummary, style: AppTextStyles.bodyMedium),
-                  const SizedBox(height: 16),
-                  Text('Habilidades requeridas', style: AppTextStyles.headlineMedium),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: (data['requiredSkills'] as List? ?? []).map<Widget>((skill) => Chip(
-                      label: Text(skill.toString(), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-                      backgroundColor: AppColors.primary,
-                    )).toList(),
-                  ),
-                  const SizedBox(height: 16),
-                  if (data['description'] != null && data['description'].isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Descripción', style: AppTextStyles.headlineMedium),
-                        const SizedBox(height: 4),
-                        Text(data['description'], style: AppTextStyles.bodyMedium),
-                      ],
+                const SizedBox(height: 24),
+                if (_matchedFreelancerId != null && _matchedFreelancerId!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        final freelancer = _getMatchedFreelancer();
+                        if (freelancer != null) {
+                          final phone = freelancer['phone'];
+                          _openWhatsApp(phone);
+                        }
+                      },
+                      icon: const Icon(Icons.chat),
+                      label: const Text('Contactar por WhatsApp'),
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
                     ),
-                  const SizedBox(height: 24),
-                  if (_matchedFreelancerId != null && _matchedFreelancerId!.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          final freelancer = _getMatchedFreelancer();
-                          if (freelancer != null) {
-                            final phone = freelancer['phone'];
-                            final whatsappUrl = 'https://wa.me/${phone.replaceAll(RegExp(r'[^\d+]'), '')}?text=Hola!%20Has%20sido%20seleccionado%20para%20la%20vacante.';
-                            canLaunchUrl(Uri.parse(whatsappUrl)).then((can) {
-                              if (can) launchUrl(Uri.parse(whatsappUrl));
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.chat),
-                        label: const Text('Contactar por WhatsApp'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
-                  if (_status != 'filled' && _status != 'closed') _buildApplicantsSection(),
-                ],
-              ),
-            );
-          },
-        ),
+                  ),
+                if (_status != 'filled' && _status != 'closed') _buildApplicantsSection(),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
@@ -306,7 +297,7 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
       return Card(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text('No hay postulantes aún.', style: AppTextStyles.bodyMedium),
+          child: Text('No hay postulantes aun.', style: AppTextStyles.bodyMedium),
         ),
       );
     }
@@ -342,11 +333,9 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
                       children: [
                         Text(applicant['name'], style: AppTextStyles.titleMedium),
                         const SizedBox(height: 4),
-                        Text('Habilidades: ${(applicant['skills'] as List).join(', ')}',
-                            style: AppTextStyles.bodySmall),
+                        Text('Habilidades: ${(applicant['skills'] as List).join(', ')}', style: AppTextStyles.bodySmall),
                         const SizedBox(height: 4),
-                        Text('Experiencia: ${(applicant['experience'] as List).length} registro(s)',
-                            style: AppTextStyles.bodySmall),
+                        Text('Experiencia: ${(applicant['experience'] as List).length} registro(s)', style: AppTextStyles.bodySmall),
                         const Spacer(),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -354,22 +343,15 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
                           children: [
                             Flexible(
                               child: TextButton(
-                                onPressed: () => _viewFreelancerProfile(applicant['freelancerId']),
+                                onPressed: () => context.push('/employer/freelancer-profile/${applicant['freelancerId']}'),
                                 child: const Text('Ver perfil'),
                               ),
                             ),
                             const SizedBox(width: 8),
                             Flexible(
                               child: ElevatedButton(
-                                onPressed: () => _makeMatch(
-                                  applicant['applicationId'],
-                                  applicant['freelancerId'],
-                                  applicant['phone'],
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                                ),
+                                onPressed: () => _makeMatch(applicant['applicationId'], applicant['freelancerId'], applicant['phone']),
+                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green, padding: const EdgeInsets.symmetric(horizontal: 12)),
                                 child: const Text('Seleccionar'),
                               ),
                             ),
@@ -391,10 +373,6 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     );
   }
 
-  void _viewFreelancerProfile(String freelancerId) {
-    context.push('/employer/freelancer-profile/$freelancerId');
-  }
-
   String _statusText(String status) {
     switch (status) {
       case 'open': return 'Abierta';
@@ -413,7 +391,3 @@ class _VacancyDetailScreenState extends State<VacancyDetailScreen> {
     }
   }
 }
-
-
-
-
